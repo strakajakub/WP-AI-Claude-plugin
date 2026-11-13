@@ -29,7 +29,11 @@ function wpaie_agent_step( array &$state, array $settings, string $api_key ) {
 	if ( $state['steps'] >= WPAIE_MAX_STEPS ) {
 		return [
 			'done'       => true,
-			'reply'      => sprintf( 'Dosáhl jsem limitu %d kroků pro jednu zprávu. Napiš „pokračuj“, pokud mám v úkolu pokračovat.', WPAIE_MAX_STEPS ),
+			'reply'      => sprintf(
+				/* translators: %d: maximum number of agent steps */
+				__( 'I reached the limit of %d steps for one message. Write "continue" if I should carry on with the task.', 'wp-ai-editor' ),
+				WPAIE_MAX_STEPS
+			),
 			'tool_calls' => [],
 		];
 	}
@@ -62,8 +66,11 @@ function wpaie_agent_step( array &$state, array $settings, string $api_key ) {
 		$category = (string) wpaie_prop( $response->stop_details ?? null, 'category', '' );
 		return new WP_Error(
 			'wpaie_refusal',
-			'Model tuto žádost odmítl zpracovat (zasáhl bezpečnostní filtr' . ( $category !== '' ? ": $category" : '' ) . '). '
-			. 'Zkus ji přeformulovat nebo v Nastavení vybrat jiný model.'
+			( $category !== ''
+				/* translators: %s: refusal category reported by the API, e.g. "cyber" */
+				? sprintf( __( 'The model declined this request (safety filter: %s).', 'wp-ai-editor' ), $category )
+				: __( 'The model declined this request (safety filter).', 'wp-ai-editor' ) )
+			. ' ' . __( 'Try rephrasing it or choose another model in Settings.', 'wp-ai-editor' )
 		);
 	}
 
@@ -79,12 +86,12 @@ function wpaie_agent_step( array &$state, array $settings, string $api_key ) {
 		// The tool call's JSON input was cut off; running it (especially a write) could corrupt data.
 		return new WP_Error(
 			'wpaie_truncated',
-			'Odpověď modelu byla přerušena uprostřed volání nástroje (limit délky odpovědi). Rozděl prosím úkol na menší kroky, např. upravuj obsah po částech.'
+			__( 'The model response was cut off in the middle of a tool call (response length limit). Please split the task into smaller steps, e.g. edit the content in parts.', 'wp-ai-editor' )
 		);
 	}
 
 	if ( ! $content ) {
-		return new WP_Error( 'wpaie_empty', 'Model nevrátil žádnou odpověď. Zkus to prosím znovu nebo zprávu přeformuluj.' );
+		return new WP_Error( 'wpaie_empty', __( 'The model returned no answer. Please try again or rephrase your message.', 'wp-ai-editor' ) );
 	}
 
 	// Store the assistant turn exactly as received (thinking blocks included; they must go back unchanged).
@@ -97,7 +104,7 @@ function wpaie_agent_step( array &$state, array $settings, string $api_key ) {
 	if ( $stop === 'max_tokens' ) {
 		return [
 			'done'       => true,
-			'reply'      => $text . "\n\n⚠ Odpověď byla zkrácena (dosažen limit délky). Napiš „pokračuj“ pro zbytek.",
+			'reply'      => $text . "\n\n⚠ " . __( 'The answer was cut short (length limit reached). Write "continue" for the rest.', 'wp-ai-editor' ),
 			'tool_calls' => [],
 		];
 	}
@@ -121,7 +128,7 @@ function wpaie_agent_step( array &$state, array $settings, string $api_key ) {
 		$result = [
 			'type'        => 'tool_result',
 			'tool_use_id' => (string) wpaie_prop( $use, 'id', '' ),
-			'content'     => is_wp_error( $output ) ? 'CHYBA: ' . $output->get_error_message() : (string) $output,
+			'content'     => is_wp_error( $output ) ? 'ERROR: ' . $output->get_error_message() : (string) $output,
 		];
 		if ( is_wp_error( $output ) ) {
 			$result['is_error'] = true;

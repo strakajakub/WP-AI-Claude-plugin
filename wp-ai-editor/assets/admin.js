@@ -3,6 +3,12 @@
 	'use strict';
 
 	var config = window.wpaieConfig || {};
+	var i18n = config.i18n || {};
+
+	function t(key, number) {
+		var text = i18n[key] || key;
+		return number === undefined ? text : text.replace('%d', String(number));
+	}
 
 	function escHtml(s) {
 		return String(s)
@@ -27,7 +33,7 @@
 				body: body
 			});
 		} catch (err) {
-			return fail('Nepodařilo se spojit se serverem webu. Zkontroluj připojení k internetu a zkus to znovu.');
+			return fail(t('networkError'));
 		}
 
 		var text = await res.text();
@@ -40,19 +46,18 @@
 
 		var trimmed = text.trim();
 		if (trimmed === '-1') {
-			return fail('Platnost stránky vypršela. Obnov ji prosím (F5) a zkus to znovu.');
+			return fail(t('expired'));
 		}
 		if (trimmed === '0') {
-			return fail('Nejsi přihlášen(a) nebo plugin není aktivní. Obnov stránku a přihlas se.');
+			return fail(t('loggedOut'));
 		}
 		if (res.status === 502 || res.status === 503 || res.status === 504 || res.status === 524) {
-			return fail('Server webu nepočkal na odpověď AI (časový limit hostingu, HTTP ' + res.status + '). ' +
-				'Zkus jednodušší požadavek nebo nižší „Úroveň přemýšlení“ v Nastavení. Případné provedené změny zůstaly uložené – napiš „pokračuj“.');
+			return fail(t('gatewayTimeout', res.status));
 		}
 		if (res.status >= 500) {
-			return fail('Chyba na serveru webu (HTTP ' + res.status + '). Podrobnosti najdeš v PHP error logu (zapni WP_DEBUG_LOG).');
+			return fail(t('serverError', res.status));
 		}
-		return fail('Server vrátil neočekávanou odpověď (HTTP ' + res.status + ').');
+		return fail(t('unexpected', res.status));
 	}
 
 	function fail(message) {
@@ -63,7 +68,7 @@
 		if (data && typeof data === 'object' && data.message) {
 			return data.message;
 		}
-		return typeof data === 'string' && data ? data : 'Neznámá chyba.';
+		return typeof data === 'string' && data ? data : t('unknownError');
 	}
 
 	// ─── Chat page ───────────────────────────────────────────────────────────
@@ -167,7 +172,7 @@
 
 		if (resetBtn) {
 			resetBtn.addEventListener('click', async function () {
-				if (busy || !window.confirm('Smazat celou historii konverzace a začít nový chat?')) {
+				if (busy || !window.confirm(t('confirmReset'))) {
 					return;
 				}
 				var res = await ajax('wpaie_reset');
@@ -193,7 +198,7 @@
 		btn.addEventListener('click', async function () {
 			btn.disabled = true;
 			out.className = '';
-			out.textContent = 'Testuji…';
+			out.textContent = t('testing');
 			var res = await ajax('wpaie_test_connection');
 			out.className = res.success ? 'is-ok' : 'is-error';
 			out.textContent = res.success ? '✔ ' + res.data.message : '✖ ' + errorMessage(res.data);

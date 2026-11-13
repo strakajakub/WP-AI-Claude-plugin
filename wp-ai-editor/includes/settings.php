@@ -17,9 +17,9 @@ function wpaie_models(): array {
 	return (array) apply_filters(
 		'wpaie_models',
 		[
-			'claude-opus-5-5'   => 'Claude Opus 5.5 — nejschopnější (doporučeno)',
-			'claude-sonnet-5-5' => 'Claude Sonnet 5.5 — rychlejší a levnější',
-			'claude-haiku-5-5'  => 'Claude Haiku 5.5 — nejrychlejší a nejlevnější',
+			'claude-opus-5-5'   => __( 'Claude Opus 5.5 — most capable (recommended)', 'wp-ai-editor' ),
+			'claude-sonnet-5-5' => __( 'Claude Sonnet 5.5 — faster and cheaper', 'wp-ai-editor' ),
+			'claude-haiku-5-5'  => __( 'Claude Haiku 5.5 — fastest and cheapest', 'wp-ai-editor' ),
 		]
 	);
 }
@@ -31,10 +31,10 @@ function wpaie_models(): array {
  */
 function wpaie_effort_levels(): array {
 	return [
-		'low'    => 'Nízká — nejrychlejší, pro jednoduché úpravy',
-		'medium' => 'Střední — vyvážená (doporučeno)',
-		'high'   => 'Vysoká — důkladnější, pomalejší',
-		'xhigh'  => 'Velmi vysoká — nejdůkladnější, nejpomalejší a nejdražší',
+		'low'    => __( 'Low — fastest, for simple edits', 'wp-ai-editor' ),
+		'medium' => __( 'Medium — balanced (recommended)', 'wp-ai-editor' ),
+		'high'   => __( 'High — more thorough, slower', 'wp-ai-editor' ),
+		'xhigh'  => __( 'Extra high — most thorough, slowest and most expensive', 'wp-ai-editor' ),
 	];
 }
 
@@ -109,7 +109,7 @@ function wpaie_sanitize_settings( $input ): array {
 		add_settings_error(
 			WPAIE_OPTION_KEY,
 			'wpaie_key_format',
-			'Zadaný API klíč nevypadá jako klíč Anthropic (musí začínat „sk-ant-“). Klíč nebyl změněn.'
+			__( 'This does not look like an Anthropic API key (it must start with "sk-ant-"). The key was not changed.', 'wp-ai-editor' )
 		);
 		$key = $old['api_key'];
 	}

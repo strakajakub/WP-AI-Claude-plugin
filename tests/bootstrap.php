@@ -34,6 +34,7 @@ class WP_Error {
 }
 
 function is_wp_error( $thing ) { return $thing instanceof WP_Error; }
+function __( $text, $domain = 'default' ) { return $text; }
 function wp_json_encode( $data, $options = 0, $depth = 512 ) { return json_encode( $data, $options, $depth ); }
 function esc_html( $text ) { return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' ); }
 function esc_attr( $text ) { return esc_html( $text ); }

@@ -129,7 +129,7 @@ function wpaie_api_request( string $method, string $path, string $api_key, ?arra
 	if ( $payload !== null ) {
 		$body = wp_json_encode( $payload, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE );
 		if ( $body === false ) {
-			return new WP_Error( 'wpaie_encode', 'Požadavek se nepodařilo převést do JSON (neplatné znaky v obsahu?).' );
+			return new WP_Error( 'wpaie_encode', __( 'The request could not be encoded as JSON (invalid characters in the content?).', 'wp-ai-editor' ) );
 		}
 		$args['body'] = $body;
 	}
@@ -153,7 +153,7 @@ function wpaie_api_request( string $method, string $path, string $api_key, ?arra
 
 		if ( $status >= 200 && $status < 300 ) {
 			if ( ! is_object( $data ) ) {
-				return new WP_Error( 'wpaie_bad_response', 'Anthropic API vrátilo neplatnou odpověď (nejde o JSON). Zkus to prosím znovu.' );
+				return new WP_Error( 'wpaie_bad_response', __( 'The Anthropic API returned an invalid (non-JSON) response. Please try again.', 'wp-ai-editor' ) );
 			}
 			return $data;
 		}
@@ -192,19 +192,20 @@ function wpaie_network_error( WP_Error $error, int $timeout ): WP_Error {
 		return new WP_Error(
 			'wpaie_timeout',
 			sprintf(
-				'Anthropic API neodpovědělo do %d s. Zkus požadavek rozdělit na menší kroky, snížit „Úroveň přemýšlení“ v Nastavení, nebo zvolit rychlejší model.',
+				/* translators: %d: timeout in seconds */
+				__( 'The Anthropic API did not respond within %d s. Split the request into smaller steps, lower the "Thinking effort" in Settings, or choose a faster model.', 'wp-ai-editor' ),
 				$timeout
 			),
 			[ 'raw' => $raw ]
 		);
 	}
 	if ( stripos( $raw, 'cURL error 6' ) !== false || stripos( $raw, 'resolve host' ) !== false ) {
-		return new WP_Error( 'wpaie_network', 'Server nemůže přeložit adresu api.anthropic.com (DNS). Zkontroluj připojení serveru k internetu, případně firewall hostingu.', [ 'raw' => $raw ] );
+		return new WP_Error( 'wpaie_network', __( 'The server cannot resolve api.anthropic.com (DNS). Check that the server can reach the internet and that the hosting firewall allows it.', 'wp-ai-editor' ), [ 'raw' => $raw ] );
 	}
 	if ( stripos( $raw, 'SSL' ) !== false || stripos( $raw, 'certificate' ) !== false ) {
-		return new WP_Error( 'wpaie_network', 'Chyba zabezpečeného spojení (SSL) s api.anthropic.com. Hosting má nejspíš zastaralé certifikáty nebo OpenSSL. Detail: ' . $raw, [ 'raw' => $raw ] );
+		return new WP_Error( 'wpaie_network', __( 'Secure connection (SSL) to api.anthropic.com failed. The hosting probably has outdated CA certificates or OpenSSL. Details:', 'wp-ai-editor' ) . ' ' . $raw, [ 'raw' => $raw ] );
 	}
-	return new WP_Error( 'wpaie_network', 'Nepodařilo se spojit s Anthropic API: ' . $raw, [ 'raw' => $raw ] );
+	return new WP_Error( 'wpaie_network', __( 'Could not connect to the Anthropic API:', 'wp-ai-editor' ) . ' ' . $raw, [ 'raw' => $raw ] );
 }
 
 /**
@@ -215,18 +216,18 @@ function wpaie_api_error( int $status, $data, string $request_id = '' ): WP_Erro
 	$raw  = (string) wpaie_prop( wpaie_prop( $data, 'error' ), 'message', '' );
 
 	if ( $raw !== '' && stripos( $raw, 'credit balance' ) !== false ) {
-		$message = 'Na účtu Anthropic došel kredit. Dobij ho v Claude Console (Settings → Billing).';
+		$message = __( 'Your Anthropic account is out of credit. Top it up in the Claude Console (Settings → Billing).', 'wp-ai-editor' );
 	} else {
 		$message = match ( true ) {
-			$status === 401 || $type === 'authentication_error' => 'Neplatný API klíč. Zkontroluj ho v AI Editor → Nastavení.',
-			$status === 402 || $type === 'billing_error'        => 'Problém s fakturací účtu Anthropic. Zkontroluj platební údaje v Claude Console.',
-			$status === 403 || $type === 'permission_error'     => 'API klíč nemá oprávnění k této akci nebo ke zvolenému modelu.',
-			$status === 404 || $type === 'not_found_error'      => 'Zvolený model nebyl nalezen nebo k němu tvůj účet nemá přístup. Vyber jiný model v Nastavení.',
-			$status === 413 || $type === 'request_too_large'    => 'Konverzace je pro API příliš velká. Začni nový chat (ikona koše vpravo nahoře).',
-			$status === 429 || $type === 'rate_limit_error'     => 'Překročen limit požadavků na Anthropic API. Počkej chvíli a zkus to znovu.',
-			$status === 529 || $type === 'overloaded_error'     => 'Anthropic API je momentálně přetížené. Zkus to prosím za chvíli.',
-			$status >= 500                                       => 'Dočasná chyba na straně Anthropic API. Zkus to prosím znovu.',
-			default                                              => 'Anthropic API odmítlo požadavek.',
+			$status === 401 || $type === 'authentication_error' => __( 'Invalid API key. Check it in AI Editor → Settings.', 'wp-ai-editor' ),
+			$status === 402 || $type === 'billing_error'        => __( 'Billing problem on your Anthropic account. Check your payment details in the Claude Console.', 'wp-ai-editor' ),
+			$status === 403 || $type === 'permission_error'     => __( 'The API key is not allowed to perform this action or to use the selected model.', 'wp-ai-editor' ),
+			$status === 404 || $type === 'not_found_error'      => __( 'The selected model was not found or your account has no access to it. Choose another model in Settings.', 'wp-ai-editor' ),
+			$status === 413 || $type === 'request_too_large'    => __( 'The conversation is too large for the API. Start a new chat (trash icon, top right).', 'wp-ai-editor' ),
+			$status === 429 || $type === 'rate_limit_error'     => __( 'Anthropic API rate limit exceeded. Wait a moment and try again.', 'wp-ai-editor' ),
+			$status === 529 || $type === 'overloaded_error'     => __( 'The Anthropic API is currently overloaded. Please try again in a moment.', 'wp-ai-editor' ),
+			$status >= 500                                       => __( 'Temporary error on the Anthropic API side. Please try again.', 'wp-ai-editor' ),
+			default                                              => __( 'The Anthropic API rejected the request.', 'wp-ai-editor' ),
 		};
 	}
 
@@ -254,12 +255,16 @@ function wpaie_api_error( int $status, $data, string $request_id = '' ): WP_Erro
  */
 function wpaie_test_connection( string $api_key, string $model ) {
 	if ( $api_key === '' ) {
-		return new WP_Error( 'wpaie_no_key', 'Není nastaven API klíč.' );
+		return new WP_Error( 'wpaie_no_key', __( 'No API key is set.', 'wp-ai-editor' ) );
 	}
 	$data = wpaie_api_request( 'GET', '/models/' . rawurlencode( $model ), $api_key, null, [], 20 );
 	if ( is_wp_error( $data ) ) {
 		return $data;
 	}
 	$name = (string) wpaie_prop( $data, 'display_name', $model );
-	return sprintf( 'Spojení funguje. Klíč je platný a model „%s“ je dostupný.', $name );
+	return sprintf(
+		/* translators: %s: model name */
+		__( 'Connection works. The key is valid and the model "%s" is available.', 'wp-ai-editor' ),
+		$name
+	);
 }

@@ -138,7 +138,7 @@ test( 'agent step: tool call → result, verbatim replay, request shape', functi
 	$result          = wpaie_agent_step( $state, settings(), 'sk-ant-test' );
 
 	check( is_array( $result ) && $result['done'] === false, 'step not done after tool use' );
-	check( $result['tool_calls'] === [ 'Čtu Doplňkový CSS…' ], 'tool label returned' );
+	check( $result['tool_calls'] === [ 'Reading Additional CSS…' ], 'tool label returned' );
 	check( $result['reply'] === 'Podívám se.', 'interim text returned' );
 	check( count( $state['messages'] ) === 3, 'assistant + tool_result appended' );
 	check( str_contains( $state['messages'][2]->content[0]->content, 'body{color:red}' ), 'tool result content' );
@@ -176,7 +176,7 @@ test( 'agent step: tool errors are flagged is_error', function () {
 	$state  = wpaie_conversation_add_user_text( wpaie_empty_conversation(), 'x' );
 	wpaie_agent_step( $state, settings(), 'k' );
 	$result = $state['messages'][2]->content[0];
-	check( ! empty( $result->is_error ) && str_starts_with( $result->content, 'CHYBA:' ), 'error result flagged' );
+	check( ! empty( $result->is_error ) && str_starts_with( $result->content, 'ERROR:' ), 'error result flagged' );
 } );
 
 test( 'agent step: refusal and truncated tool call are errors and not stored', function () {
@@ -198,19 +198,19 @@ test( 'agent step limit', function () {
 	$state          = wpaie_conversation_add_user_text( wpaie_empty_conversation(), 'x' );
 	$state['steps'] = WPAIE_MAX_STEPS;
 	$result         = wpaie_agent_step( $state, settings(), 'k' );
-	check( $result['done'] === true && str_contains( $result['reply'], 'limitu' ), 'stops at the step limit' );
+	check( $result['done'] === true && str_contains( $result['reply'], 'limit of' ), 'stops at the step limit' );
 	check( $GLOBALS['wp_test']['requests'] === [], 'no API call' );
 } );
 
 test( 'API errors are mapped to friendly messages', function () {
 	wpaie_test_queue_response( 401, [ 'type' => 'error', 'error' => [ 'type' => 'authentication_error', 'message' => 'invalid x-api-key' ] ], [ 'request-id' => 'req_1' ] );
 	$e = wpaie_api_request( 'POST', '/messages', 'k', [] );
-	check( is_wp_error( $e ) && str_starts_with( $e->get_error_message(), 'Neplatný API klíč' ), '401 message' );
+	check( is_wp_error( $e ) && str_starts_with( $e->get_error_message(), 'Invalid API key' ), '401 message' );
 	check( str_contains( $e->get_error_message(), 'req_1' ), 'request id included' );
 
 	wpaie_test_queue_response( 400, [ 'type' => 'error', 'error' => [ 'type' => 'invalid_request_error', 'message' => 'Your credit balance is too low to access the Anthropic API.' ] ] );
 	$e = wpaie_api_request( 'POST', '/messages', 'k', [] );
-	check( str_contains( $e->get_error_message(), 'došel kredit' ), 'credit balance message' );
+	check( str_contains( $e->get_error_message(), 'out of credit' ), 'credit balance message' );
 
 	wpaie_test_queue_response( 200, 'not json' );
 	$e = wpaie_api_request( 'POST', '/messages', 'k', [] );
@@ -247,7 +247,7 @@ test( 'tool definitions are valid for the API', function () {
 		$names[] = $tool['name'];
 		check( preg_match( '/^[a-zA-Z0-9_-]{1,64}$/', $tool['name'] ) === 1, "valid name {$tool['name']}" );
 		check( ( $tool['input_schema']['type'] ?? '' ) === 'object', "object schema {$tool['name']}" );
-		check( wpaie_tool_label( $tool['name'], [] ) !== "Spouštím {$tool['name']}…", "label for {$tool['name']}" );
+		check( wpaie_tool_label( $tool['name'], [] ) !== "Running {$tool['name']}…", "label for {$tool['name']}" );
 	}
 	check( count( $names ) === count( array_unique( $names ) ), 'unique tool names' );
 } );

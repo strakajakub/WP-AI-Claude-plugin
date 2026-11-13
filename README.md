@@ -1,53 +1,53 @@
-# WP AI Editor — Claude asistent pro WordPress
+# WP AI Editor — Claude assistant for WordPress
 
-WordPress plugin, který do administrace přidá chat s AI asistentem (Claude od Anthropic). Asistent umí na pokyn v češtině číst a upravovat obsah webu: stránky a příspěvky, globální styly, šablony, menu, identitu webu a Doplňkový CSS.
+A WordPress plugin that adds an AI assistant chat (Claude by Anthropic) to the admin. Tell it what you want in plain language and it reads and edits the site for you: pages and posts, global styles, templates, menus, site identity and Additional CSS. It replies in the language you write in.
 
-> „Změň barvu primárního tlačítka na #e63946“ · „Napiš koncept stránky O nás“ · „Přejmenuj v hlavním menu položku Blog na Články“
+> "Change the primary button color to #e63946" · "Write a draft of an About us page" · "Rename the Blog item in the main menu to Articles"
 
-## Co umí
+## Features
 
-| Oblast | Čtení | Úpravy | Projeví se |
+| Area | Read | Edit | Takes effect |
 |---|---|---|---|
-| Stránky a příspěvky | seznam, vyhledávání, obsah | úprava, vytvoření | **jako koncept** (publikace jen na výslovné přání) |
-| Globální styly (theme.json) | styly tématu i uživatelské úpravy | sloučení do `settings` / `styles` | ihned (vratné v Revizích stylů) |
-| Block templates a template parts (FSE) | seznam, obsah | uložení uživatelské kopie | ihned (vratné v editoru webu) |
-| Navigační menu | menu a položky | přidání a přejmenování položky | ihned |
-| Identita webu | název, podtitulek, logo, záhlaví | změna / odebrání | ihned |
-| Doplňkový CSS | aktuální CSS | doplnění / přepsání | ihned (vratné v revizích Customizeru) |
+| Pages and posts | list, search, content | update, create | **as a draft** (published only when you explicitly ask) |
+| Global styles (theme.json) | theme styles and user customizations | merge into `settings` / `styles` | immediately (revertible in Styles → Revisions) |
+| Block templates and template parts (FSE) | list, content | save a user copy | immediately (revertible in the Site Editor) |
+| Navigation menus | menus and items | add and rename items | immediately |
+| Site identity | title, tagline, logo, header image | change / remove | immediately |
+| Additional CSS | current CSS | append / replace | immediately (revertible in Customizer revisions) |
 
-Asistent při zahájení konverzace zjistí, jestli web používá block (FSE) nebo klasické téma, a podle toho navrhuje řešení. Nemůže upravovat PHP soubory, instalovat pluginy a témata ani měnit nastavení Customizeru mimo identitu webu a CSS.
+When a conversation starts, the assistant checks whether the site uses a block (FSE) or a classic theme and suggests solutions that fit. It cannot edit PHP files, install plugins or themes, or change Customizer settings other than site identity and CSS.
 
-## Požadavky
+## Requirements
 
 - WordPress 6.0+
-- PHP 8.0+ (s rozšířeními `curl`/`openssl` a `mbstring`)
-- API klíč Anthropic ([Claude Console → API Keys](https://platform.claude.com/settings/keys)) s kreditem
-- Uživatel s rolí administrátora (oprávnění `manage_options`)
+- PHP 8.0+ (with the `curl`/`openssl` and `mbstring` extensions)
+- An Anthropic API key ([Claude Console → API Keys](https://platform.claude.com/settings/keys)) with credit
+- A user with the administrator role (`manage_options` capability)
 
-## Instalace
+## Installation
 
-1. Stáhni `wp-ai-editor.zip` z [Releases](https://github.com/strakajakub/WP-AI-Claude-plugin/releases) (nebo si ZIP vytvoř ze složky [`wp-ai-editor/`](wp-ai-editor), viz [Vývoj](#vývoj)).
-2. V administraci: **Pluginy → Instalace pluginů → Nahrát plugin**, vyber ZIP a aktivuj.
-3. Otevři **AI Editor → Nastavení**, vlož API klíč, ulož a klikni na **Otestovat připojení**.
+1. Download `wp-ai-editor.zip` from [Releases](https://github.com/strakajakub/WP-AI-Claude-plugin/releases), or build the ZIP from the [`wp-ai-editor/`](wp-ai-editor) folder (see [Development](#development)).
+2. In the admin go to **Plugins → Add New → Upload Plugin**, choose the ZIP and activate it.
+3. Open **AI Editor → Settings**, paste the API key, save, and click **Test connection**.
 
-### API klíč ve wp-config.php (doporučeno)
+### API key in wp-config.php (recommended)
 
-Bezpečnější než ukládat klíč do databáze:
+Safer than storing the key in the database:
 
 ```php
 define( 'WPAIE_API_KEY', 'sk-ant-…' );
 ```
 
-Konstanta má přednost před klíčem uloženým v Nastavení.
+The constant takes precedence over a key saved in Settings.
 
-## Nastavení
+## Settings
 
-| Volba | Výchozí | Popis |
+| Option | Default | Description |
 |---|---|---|
-| Model | Claude Opus 5.5 | Opus 5.5 (nejschopnější), Sonnet 5.5 (rychlejší, levnější), Haiku 5.5 (nejrychlejší, nejlevnější) |
-| Úroveň přemýšlení | Střední | Nízká / Střední / Vysoká / Velmi vysoká. Vyšší úroveň je pečlivější, ale pomalejší a dražší. |
+| Model | Claude Opus 5.5 | Opus 5.5 (most capable), Sonnet 5.5 (faster, cheaper), Haiku 5.5 (fastest, cheapest) |
+| Thinking effort | Medium | Low / Medium / High / Extra high. Higher effort is more careful but slower and more expensive. |
 
-Seznam modelů lze rozšířit filtrem:
+You can add models with a filter:
 
 ```php
 add_filter( 'wpaie_models', function ( $models ) {
@@ -56,73 +56,77 @@ add_filter( 'wpaie_models', function ( $models ) {
 } );
 ```
 
-## Jak to funguje
+## How it works
 
-- **Claude Messages API** (`anthropic-version: 2026-10-21`) voláno přes WordPress HTTP API (`wp_remote_request`). Oficiální PHP SDK se záměrně nepoužívá: plugin distribuovaný jako ZIP by musel přibalit Composer závislosti, které se snadno střetnou s jinými pluginy.
-- **Adaptivní přemýšlení** (u Opus 5.5 vždy zapnuté), jeho hloubku řídí volba *Úroveň přemýšlení* (`output_config.effort`).
-- **Krok za krokem:** každý AJAX požadavek provede jedno volání modelu a případné nástroje. Prohlížeč pak pokračuje dalším krokem. Žádný požadavek tak nemusí přežít celou smyčku agenta, na kterou by hosting uplatnil časový limit. Mezivýsledky (použité nástroje) se zobrazují průběžně. Maximum je 15 kroků na zprávu.
-- **Historie** se ukládá pro každého uživatele zvlášť (user meta `wpaie_history`) a jen se přidává na konec. System prompt se zafixuje při zahájení konverzace. Je to nutné, protože Opus 5.5 váže své „myšlenkové“ bloky na přesnou podobu předchozí konverzace. Úprava starších zpráv by je zneplatnila a u nových účtů API vrací chybu 400. Staré výsledky nástrojů proto maže API na své straně (`context_management`). Lokální historie se zkracuje jen mezi zprávami a jen když přeroste 400 kB.
-- **Volitelné beta funkce:** serverové mazání starých výsledků nástrojů, `drop_block` pro neplatné myšlenkové bloky a automatický **fallback na jiný model**, když bezpečnostní filtr žádost odmítne (u Opus a Sonnet). Pokud by je API odmítlo, plugin se na den přepne do režimu bez nich a pokračuje.
-- **Prompt caching** (`cache_control`) zlevňuje opakované posílání historie mezi kroky.
+- **Claude Messages API** (`anthropic-version: 2026-10-21`), called through the WordPress HTTP API (`wp_remote_request`). The official PHP SDK is not used on purpose: a plugin distributed as a ZIP would have to bundle Composer dependencies, which easily clash with other plugins.
+- **Adaptive thinking** (always on for Opus 5.5). The *Thinking effort* setting (`output_config.effort`) controls how deep it goes.
+- **One step per request:** each AJAX request runs one model call plus any tools, and then the browser asks for the next step. No single request has to survive the whole agent loop, so hosting time limits are not hit. Tool calls are shown live as they happen. A message gets at most 15 steps.
+- **History** is stored per user (user meta `wpaie_history`) and is only ever appended to. The system prompt is frozen when the conversation starts. This matters because Opus 5.5 binds its thinking blocks to the exact earlier conversation: editing earlier messages invalidates them, and for new accounts the API then returns a 400 error. Old tool results are therefore cleared on the API side (`context_management`). The local history is shrunk only between messages, and only when it grows past 400 kB.
+- **Optional beta features:** server-side clearing of old tool results, `drop_block` for invalid thinking blocks, and an automatic **fallback to another model** when a safety filter declines a request (Opus and Sonnet). If the API rejects them, the plugin switches to running without them for a day and carries on.
+- **Prompt caching** (`cache_control`) makes resending the history between steps cheaper.
 
-## Chybové hlášky a řešení problémů
+## Error messages and troubleshooting
 
-Chyby se zobrazují česky přímo v chatu, včetně HTTP kódu a `request-id` pro dohledání u Anthropic.
+Errors are shown right in the chat, with the HTTP status and the `request-id` so Anthropic can look them up.
 
-| Hláška | Co dělat |
+| Message | What to do |
 |---|---|
-| Neplatný API klíč | Zkontroluj klíč v Nastavení, případně vytvoř nový. |
-| Na účtu Anthropic došel kredit | Dobij kredit v Claude Console → Billing. |
-| Překročen limit požadavků / API je přetížené | Plugin to sám zkusí znovu (až 2×). Pokud chyba trvá, počkej chvíli. |
-| Anthropic API neodpovědělo do 240 s | Rozděl úkol, sniž úroveň přemýšlení nebo zvol rychlejší model. |
-| Server webu nepočkal na odpověď AI (HTTP 502/504) | Časový limit hostingu (proxy/nginx) je kratší než doba odpovědi modelu. Zvyš `proxy_read_timeout` / `max_execution_time`, nebo sniž úroveň přemýšlení. |
-| Platnost stránky vypršela | Obnov stránku (F5). |
-| Předchozí požadavek ještě běží | Chat je otevřený v jiné záložce. Počkej, až doběhne. |
-| Model žádost odmítl (bezpečnostní filtr) | Přeformuluj zadání nebo zvol jiný model. |
+| Invalid API key | Check the key in Settings, or create a new one. |
+| Your Anthropic account is out of credit | Top up in the Claude Console → Billing. |
+| Rate limit exceeded / API overloaded | The plugin retries automatically (up to 2 times). If it persists, wait a moment. |
+| The Anthropic API did not respond within 240 s | Split the task, lower the thinking effort, or choose a faster model. |
+| The website server stopped waiting for the AI (HTTP 502/504) | The hosting time limit (proxy/nginx) is shorter than the model's response time. Raise `proxy_read_timeout` / `max_execution_time`, or lower the thinking effort. |
+| This page has expired | Reload the page (F5). |
+| A previous request is still running | The chat is open in another tab. Wait for it to finish. |
+| The model declined this request (safety filter) | Rephrase the request or choose another model. |
 
-Pokud chyba nastane uprostřed úkolu, změny z předchozích kroků zůstanou uložené. Napiš „pokračuj“ a asistent naváže.
+If an error happens in the middle of a task, the changes from earlier steps stay saved. Write "continue" and the assistant picks up where it left off.
 
-Podrobný log: v `wp-config.php` zapni `WP_DEBUG` a `WP_DEBUG_LOG`. Plugin zapisuje do `wp-content/debug.log` řádky `[WP AI Editor] …` (nikdy ne API klíč).
+Detailed log: enable `WP_DEBUG` and `WP_DEBUG_LOG` in `wp-config.php`. The plugin writes `[WP AI Editor] …` lines to `wp-content/debug.log`. The API key is never logged.
 
-## Bezpečnost
+## Security
 
-- Chat a všechny AJAX akce jsou dostupné jen administrátorům a chráněné nonce.
-- Úpravy obsahu se ukládají jako **koncepty**. Změny stylů, šablon, menu, identity a CSS jsou živé ihned, ale dají se vrátit přes revize WordPressu.
-- API klíč se nikdy nevypisuje do HTML (formulář ukazuje jen maskovanou podobu).
-- Zprávy a obsah webu odesílané modelu zpracovává Anthropic. Viz [zásady Anthropic](https://www.anthropic.com/legal).
+- The chat and all AJAX actions are available to administrators only and are protected by a nonce.
+- Content edits are saved as **drafts**. Changes to styles, templates, menus, identity and CSS are live immediately, but can be reverted through WordPress revisions.
+- The API key is never printed into the HTML (the form shows only a masked version).
+- Messages and site content sent to the model are processed by Anthropic. See [Anthropic's policies](https://www.anthropic.com/legal).
 
-## Odinstalace
+## Translation
 
-Smazáním pluginu v administraci (Pluginy → Smazat) se odstraní nastavení i historie konverzací všech uživatelů (`uninstall.php`).
+All user-facing strings use the `wp-ai-editor` text domain, so the admin UI can be translated (`.po`/`.mo` files in `wp-ai-editor/languages/`). The assistant itself replies in whatever language you write in.
 
-## Vývoj
+## Uninstall
+
+Deleting the plugin in the admin (Plugins → Delete) removes its settings and every user's conversation history (`uninstall.php`).
+
+## Development
 
 ```
-wp-ai-editor/              # samotný plugin (obsah ZIPu)
-├── wp-ai-editor.php       # hlavička pluginu, konstanty, načtení modulů
+wp-ai-editor/              # the plugin itself (contents of the ZIP)
+├── wp-ai-editor.php       # plugin header, constants, module loading
 ├── uninstall.php
 ├── includes/
-│   ├── helpers.php        # pomocné funkce, mini-markdown
-│   ├── settings.php       # nastavení (klíč, model, effort)
-│   ├── api.php            # klient Messages API, retry, překlad chyb
-│   ├── site-context.php   # detekce tématu, system prompt
-│   ├── tools.php          # definice a implementace nástrojů
-│   ├── conversation.php   # ukládání a zkracování historie
-│   ├── agent.php          # jeden krok agenta
-│   ├── ajax.php           # AJAX endpointy
-│   └── admin.php          # stránky v administraci
+│   ├── helpers.php        # helpers, mini-markdown
+│   ├── settings.php       # settings (key, model, effort)
+│   ├── api.php            # Messages API client, retries, error mapping
+│   ├── site-context.php   # theme detection, system prompt
+│   ├── tools.php          # tool definitions and implementations
+│   ├── conversation.php   # history storage and compaction
+│   ├── agent.php          # a single agent step
+│   ├── ajax.php           # AJAX endpoints
+│   └── admin.php          # admin screens
 └── assets/                # admin.css, admin.js
-tests/                     # testy bez závislostí (stuby WordPressu)
+tests/                     # dependency-free tests (WordPress stubs)
 ```
 
-Testy a kontrola syntaxe:
+Tests and syntax check:
 
 ```bash
 php tests/run.php
 find wp-ai-editor -name '*.php' -exec php -l {} \;
 ```
 
-Sestavení ZIPu pro instalaci:
+Building the installable ZIP:
 
 ```bash
 zip -r wp-ai-editor.zip wp-ai-editor          # Linux/macOS
@@ -131,12 +135,12 @@ zip -r wp-ai-editor.zip wp-ai-editor          # Linux/macOS
 Compress-Archive -Path wp-ai-editor -DestinationPath wp-ai-editor.zip -Force   # Windows
 ```
 
-GitHub Actions spouští testy na PHP 8.0–8.4, ke každému běhu přikládá ZIP jako artefakt a po pushnutí tagu `v*` (např. `v2.0.0`) vytvoří Release se ZIPem.
+GitHub Actions runs the tests on PHP 8.0–8.4 and attaches the ZIP to every run as an artifact. Pushing a `v*` tag (e.g. `v2.0.0`) creates a Release with the ZIP.
 
 ## Changelog
 
-Viz [CHANGELOG.md](CHANGELOG.md).
+See [CHANGELOG.md](CHANGELOG.md).
 
-## Licence
+## License
 
-Copyright © 2026 Jakub Straka. Licence [GPL-2.0-or-later](LICENSE), stejně jako WordPress. Plugin můžeš volně používat, upravovat i šířit. Upravené verze, které šíříš dál, musí zůstat pod stejnou licencí.
+Copyright © 2026 Jakub Straka. Licensed under [GPL-2.0-or-later](LICENSE), like WordPress itself. You may use, modify and redistribute the plugin freely; modified versions you distribute must stay under the same license.

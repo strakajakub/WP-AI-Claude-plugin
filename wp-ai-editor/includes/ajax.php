@@ -30,17 +30,17 @@ function wpaie_ajax_fail( string $message, string $code = 'error', int $status =
 
 function wpaie_ajax_guard(): void {
 	if ( ! check_ajax_referer( 'wpaie_nonce', 'nonce', false ) ) {
-		wpaie_ajax_fail( 'Platnost stránky vypršela. Obnov ji prosím (F5) a zkus to znovu.', 'nonce', 403 );
+		wpaie_ajax_fail( __( 'This page has expired. Please reload it (F5) and try again.', 'wp-ai-editor' ), 'nonce', 403 );
 	}
 	if ( ! current_user_can( WPAIE_CAPABILITY ) ) {
-		wpaie_ajax_fail( 'Na použití AI Editoru nemáš oprávnění (vyžaduje roli administrátora).', 'forbidden', 403 );
+		wpaie_ajax_fail( __( 'You are not allowed to use AI Editor (administrator role required).', 'wp-ai-editor' ), 'forbidden', 403 );
 	}
 }
 
 function wpaie_require_api_key(): string {
 	$key = wpaie_get_api_key();
 	if ( $key === '' ) {
-		wpaie_ajax_fail( 'Chybí API klíč Anthropic. Nastav ho v AI Editor → Nastavení.', 'no_key' );
+		wpaie_ajax_fail( __( 'The Anthropic API key is missing. Set it in AI Editor → Settings.', 'wp-ai-editor' ), 'no_key' );
 	}
 	return $key;
 }
@@ -51,7 +51,7 @@ function wpaie_require_api_key(): string {
 function wpaie_acquire_lock(): void {
 	$key = 'wpaie_lock_' . get_current_user_id();
 	if ( get_transient( $key ) ) {
-		wpaie_ajax_fail( 'Předchozí požadavek ještě běží (možná v jiné záložce). Počkej prosím, než doběhne.', 'locked' );
+		wpaie_ajax_fail( __( 'A previous request is still running (maybe in another tab). Please wait for it to finish.', 'wp-ai-editor' ), 'locked' );
 	}
 	set_transient( $key, time(), WPAIE_HTTP_TIMEOUT + 120 );
 	register_shutdown_function( 'wpaie_release_lock' );
@@ -86,10 +86,14 @@ function wpaie_ajax_chat(): void {
 
 	$message = isset( $_POST['message'] ) && is_string( $_POST['message'] ) ? trim( wp_unslash( $_POST['message'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- free text for the model, never output unescaped.
 	if ( $message === '' ) {
-		wpaie_ajax_fail( 'Zpráva je prázdná.', 'empty' );
+		wpaie_ajax_fail( __( 'The message is empty.', 'wp-ai-editor' ), 'empty' );
 	}
 	if ( mb_strlen( $message ) > WPAIE_MAX_MESSAGE_CHARS ) {
-		wpaie_ajax_fail( sprintf( 'Zpráva je příliš dlouhá (max. %d znaků). Rozděl ji prosím na menší části.', WPAIE_MAX_MESSAGE_CHARS ), 'too_long' );
+		wpaie_ajax_fail( sprintf(
+			/* translators: %d: maximum number of characters */
+			__( 'The message is too long (max. %d characters). Please split it into smaller parts.', 'wp-ai-editor' ),
+			WPAIE_MAX_MESSAGE_CHARS
+		), 'too_long' );
 	}
 
 	wpaie_acquire_lock();
@@ -120,14 +124,14 @@ function wpaie_ajax_continue(): void {
 
 	$state = wpaie_conversation_load();
 	if ( ! wpaie_conversation_is_pending( $state ) ) {
-		wpaie_ajax_fail( 'Není co dokončovat – pošli novou zprávu.', 'not_pending' );
+		wpaie_ajax_fail( __( 'There is nothing to continue – send a new message.', 'wp-ai-editor' ), 'not_pending' );
 	}
 
 	$result = wpaie_agent_step( $state, wpaie_get_settings(), $api_key );
 	if ( is_wp_error( $result ) ) {
 		// Changes made by earlier steps stay saved; the next message continues from them.
 		wpaie_ajax_fail(
-			$result->get_error_message() . ' Změny provedené v předchozích krocích zůstaly uložené – napiš „pokračuj“ pro dokončení úkolu.',
+			$result->get_error_message() . ' ' . __( 'Changes made in the previous steps are saved – write "continue" to finish the task.', 'wp-ai-editor' ),
 			$result->get_error_code()
 		);
 	}

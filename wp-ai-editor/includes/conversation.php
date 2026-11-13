@@ -25,7 +25,7 @@ define( 'WPAIE_HISTORY_MAX_BYTES', 400 * 1024 );
 /** How many most recent tool results stay intact when the history is shrunk. */
 define( 'WPAIE_HISTORY_KEEP_TOOL_RESULTS', 4 );
 
-const WPAIE_TRIMMED_TOOL_RESULT = '[Výsledek nástroje byl odstraněn kvůli délce konverzace.]';
+const WPAIE_TRIMMED_TOOL_RESULT = '[Tool result removed to keep the conversation short.]';
 
 function wpaie_empty_conversation(): array {
 	return [

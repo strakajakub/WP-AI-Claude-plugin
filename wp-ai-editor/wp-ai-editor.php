@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       WP AI Editor
  * Plugin URI:        https://github.com/strakajakub/WP-AI-Claude-plugin
- * Description:       AI asistent (Claude) pro úpravu obsahu, stylů, šablon a menu přímo v administraci WordPressu.
+ * Description:       AI assistant (Claude) that edits content, styles, templates and menus right from the WordPress admin.
  * Version:           2.0.0
  * Requires at least: 6.0
  * Requires PHP:      8.0
@@ -11,6 +11,7 @@
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  * Text Domain:       wp-ai-editor
+ * Domain Path:       /languages
  *
  * Copyright (C) 2026 Jakub Straka
  *
@@ -33,6 +34,13 @@ define( 'WPAIE_URL', plugin_dir_url( __FILE__ ) );
 define( 'WPAIE_OPTION_KEY', 'wpaie_settings' );
 define( 'WPAIE_HISTORY_KEY', 'wpaie_history' );
 define( 'WPAIE_CAPABILITY', 'manage_options' );
+
+add_action(
+	'init',
+	function () {
+		load_plugin_textdomain( 'wp-ai-editor', false, dirname( plugin_basename( WPAIE_FILE ) ) . '/languages' );
+	}
+);
 
 require_once WPAIE_DIR . 'includes/helpers.php';
 require_once WPAIE_DIR . 'includes/settings.php';
