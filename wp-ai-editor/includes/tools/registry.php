@@ -62,6 +62,7 @@ function wpaie_tool_registry(): array {
 function wpaie_core_tools(): array {
 	return array_merge(
 		wpaie_content_tools(),
+		function_exists( 'wpaie_taxonomy_search_tools' ) ? wpaie_taxonomy_search_tools() : [],
 		function_exists( 'wpaie_media_tools' ) ? wpaie_media_tools() : [],
 		function_exists( 'wpaie_seo_tools' ) ? wpaie_seo_tools() : [],
 		wpaie_design_tools(),

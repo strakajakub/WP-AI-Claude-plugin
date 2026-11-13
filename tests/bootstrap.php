@@ -52,6 +52,19 @@ class WPAIE_Test_DB {
 	public function query( $query ) { return 0; }
 	public function get_var( $query ) { return count( $this->rows ); }
 	public function get_results( $query ) { return array_reverse( array_values( $this->rows ) ); }
+	public $posts = 'wp_posts';
+	public function esc_like( $text ) { return $text; }
+	/** Search stub: returns IDs of test posts whose title or content contains the LIKE needle. */
+	public function get_col( $query ) {
+		$needle = trim( (string) $query[1][0], '%' );
+		$ids    = [];
+		foreach ( $GLOBALS['wp_test']['posts'] as $p ) {
+			if ( stripos( $p->post_content, $needle ) !== false || stripos( $p->post_title, $needle ) !== false ) {
+				$ids[] = $p->ID;
+			}
+		}
+		return $ids;
+	}
 }
 $GLOBALS['wpdb'] = new WPAIE_Test_DB();
 
@@ -65,7 +78,8 @@ function esc_url( $url ) { return (string) $url; }
 function esc_url_raw( $url ) { return filter_var( $url, FILTER_SANITIZE_URL ); }
 function sanitize_text_field( $str ) { return trim( strip_tags( (string) $str ) ); }
 function sanitize_title( $str ) { return strtolower( preg_replace( '/[^a-z0-9-]+/i', '-', (string) $str ) ); }
-function wp_slash( $value ) { return is_string( $value ) ? addslashes( $value ) : $value; }
+function wp_slash( $value ) { return is_array( $value ) ? array_map( 'wp_slash', $value ) : ( is_string( $value ) ? addslashes( $value ) : $value ); }
+function wp_text_diff( $a, $b, $args = [] ) { return $a === $b ? '' : '<table class="diff"><tr><td>' . htmlspecialchars( $a ) . '</td><td>' . htmlspecialchars( $b ) . '</td></tr></table>'; }
 function wp_unslash( $value ) { return is_string( $value ) ? stripslashes( $value ) : $value; }
 function wp_parse_args( $args, $defaults = [] ) { return array_merge( $defaults, (array) $args ); }
 function apply_filters( $hook, $value ) { return $value; }
@@ -79,8 +93,29 @@ function get_current_user_id() { return 1; }
 function current_user_can( $cap, ...$args ) { return ! in_array( $cap, $GLOBALS['wp_test']['denied_caps'] ?? [], true ); }
 function current_time( $type, $gmt = false ) { return gmdate( 'Y-m-d H:i:s' ); }
 function wp_rand( $min = 0, $max = 0 ) { return $max; }
-function get_post( $id ) { return null; }
+class WP_Post {
+	public $ID = 0, $post_type = 'post', $post_status = 'draft', $post_title = '', $post_content = '', $post_excerpt = '', $post_modified = '', $post_parent = 0;
+	public function __construct( array $data = [] ) { foreach ( $data as $k => $v ) { $this->$k = $v; } }
+}
+function get_post( $id ) { $p = $GLOBALS['wp_test']['posts'][ (int) ( is_object( $id ) ? $id->ID : $id ) ] ?? null; return $p ? clone $p : null; }
+function wpaie_test_add_post( array $data ): WP_Post { $p = new WP_Post( $data ); $GLOBALS['wp_test']['posts'][ $p->ID ] = $p; return $p; }
+function wp_update_post( $args, $wp_error = false ) {
+	$args = wp_unslash_deep( $args );
+	$post = $GLOBALS['wp_test']['posts'][ (int) $args['ID'] ] ?? null;
+	if ( ! $post ) { return new WP_Error( 'invalid_post', 'Invalid post ID.' ); }
+	foreach ( $args as $k => $v ) { if ( $k !== 'ID' ) { $post->$k = $v; } }
+	return $post->ID;
+}
+function wp_unslash_deep( $v ) { return is_array( $v ) ? array_map( 'wp_unslash_deep', $v ) : wp_unslash( $v ); }
+function get_edit_post_link( $id, $context = '' ) { return ''; }
+function get_preview_post_link( $id ) { return ''; }
+function get_the_title( $id ) { $p = get_post( $id ); return $p ? $p->post_title : ''; }
+function get_post_meta( $id, $key, $single = false ) { return $GLOBALS['wp_test']['meta'][ (int) $id ][ $key ] ?? ''; }
+function update_post_meta( $id, $key, $value ) { $GLOBALS['wp_test']['meta'][ (int) $id ][ $key ] = wp_unslash( $value ); return true; }
+function delete_post_meta( $id, $key ) { unset( $GLOBALS['wp_test']['meta'][ (int) $id ][ $key ] ); return true; }
 function absint( $v ) { return abs( (int) $v ); }
+function _n( $single, $plural, $n, $domain = 'default' ) { return $n === 1 ? $single : $plural; }
+function get_post_status( $id ) { $p = get_post( $id ); return $p ? $p->post_status : false; }
 function add_settings_error( $setting, $code, $message ) { $GLOBALS['wp_test']['settings_errors'][] = $code; }
 
 function get_option( $name, $default = false ) { return $GLOBALS['wp_test']['options'][ $name ] ?? $default; }
@@ -121,7 +156,7 @@ $wpaie_dir = dirname( __DIR__ ) . '/wp-ai-editor/includes/';
 foreach ( [ 'helpers', 'settings', 'api', 'tools/registry', 'tools/content', 'tools/design', 'changes', 'conversation', 'agent' ] as $wpaie_file ) {
 	require $wpaie_dir . $wpaie_file . '.php';
 }
-foreach ( [ 'pricing', 'stream', 'images', 'tools/media', 'tools/seo', 'tools/woocommerce' ] as $wpaie_file ) {
+foreach ( [ 'pricing', 'stream', 'images', 'tools/taxonomy-search', 'tools/media', 'tools/seo', 'tools/woocommerce' ] as $wpaie_file ) {
 	if ( file_exists( $wpaie_dir . $wpaie_file . '.php' ) ) {
 		require $wpaie_dir . $wpaie_file . '.php';
 	}
@@ -137,6 +172,8 @@ function wpaie_test_reset(): void {
 		'custom_css'      => '',
 		'settings_errors' => [],
 		'denied_caps'     => [],
+		'posts'           => [],
+		'meta'            => [],
 	];
 	$GLOBALS['wpdb']->rows      = [];
 	$GLOBALS['wpdb']->insert_id = 0;

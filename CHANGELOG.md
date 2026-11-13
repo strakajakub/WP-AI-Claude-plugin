@@ -13,6 +13,14 @@
 - Image attachments (button, paste, drag & drop; up to 5 per message, 5 MB each): saved to the Media Library and sent through the Files API; files are deleted from the Files API together with the conversation.
 - "AI Editor" sidebar in the block editor (the chat embedded with the edited post as context) and an admin bar link with the current page as context.
 
+### New tools
+- Categories and tags (list, set on a post), excerpts.
+- Search across all content and bulk replace (up to 100 posts, one undoable change, always asks in the default approval mode).
+- Media Library: list images (also without alt text), let the model look at an image, bulk alt texts, featured images.
+- SEO titles and meta descriptions for Yoast SEO and Rank Math (only when active).
+- WooCommerce products and variations: names, descriptions, prices, sale prices, stock, status (only when active).
+- The system prompt lists only what is available on the site.
+
 ### Costs and streaming
 - Estimated cost per answer and per conversation, monthly usage table in Settings, and a monthly budget that stops the chat when it is used up.
 - Streaming ("Live answers", on by default): the answer appears as it is written; the Messages API is streamed over cURL and forwarded to the browser as server-sent events. Falls back to normal requests without cURL.

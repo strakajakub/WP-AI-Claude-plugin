@@ -135,7 +135,14 @@ function wpaie_render_chat_page(): void {
 				<div class="wpaie-msg wpaie-msg--ai">
 					<div class="wpaie-bubble">
 						<?php esc_html_e( 'Hi! I am the AI assistant for managing this site. I can edit:', 'wp-ai-editor' ); ?><br>
-						• <strong><?php esc_html_e( 'content', 'wp-ai-editor' ); ?></strong> — <?php esc_html_e( 'pages and posts (saved as drafts),', 'wp-ai-editor' ); ?><br>
+						• <strong><?php esc_html_e( 'content', 'wp-ai-editor' ); ?></strong> — <?php esc_html_e( 'pages and posts (saved as drafts), categories, tags, search & replace,', 'wp-ai-editor' ); ?><br>
+						• <strong><?php esc_html_e( 'images', 'wp-ai-editor' ); ?></strong> — <?php esc_html_e( 'alt texts, featured images; you can also send me a screenshot,', 'wp-ai-editor' ); ?><br>
+						<?php if ( function_exists( 'wpaie_seo_plugin' ) && wpaie_seo_plugin() ) : ?>
+							• <strong><?php esc_html_e( 'SEO', 'wp-ai-editor' ); ?></strong> — <?php esc_html_e( 'SEO titles and meta descriptions,', 'wp-ai-editor' ); ?><br>
+						<?php endif; ?>
+						<?php if ( class_exists( 'WooCommerce' ) && current_user_can( 'edit_products' ) ) : ?>
+							• <strong><?php esc_html_e( 'products', 'wp-ai-editor' ); ?></strong> — <?php esc_html_e( 'descriptions, prices, sales and stock,', 'wp-ai-editor' ); ?><br>
+						<?php endif; ?>
 						• <strong><?php esc_html_e( 'styles', 'wp-ai-editor' ); ?></strong> — <?php esc_html_e( 'global styles (theme.json) and Additional CSS,', 'wp-ai-editor' ); ?><br>
 						• <strong><?php esc_html_e( 'templates', 'wp-ai-editor' ); ?></strong> — <?php esc_html_e( 'block templates (FSE),', 'wp-ai-editor' ); ?><br>
 						• <strong><?php esc_html_e( 'menus and site identity', 'wp-ai-editor' ); ?></strong> — <?php esc_html_e( 'menu items, logo, site title.', 'wp-ai-editor' ); ?><br>

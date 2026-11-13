@@ -563,5 +563,79 @@ test( 'context note: only same-site URLs and editable posts', function () {
 	check( wpaie_conversation_transcript( $state )[0]['text'] === 'tuhle stránku', 'context hidden in the transcript' );
 } );
 
+function wp_strip_all_tags( $s ) { return strip_tags( (string) $s ); }
+
+test( 'content: editing a published post is live, saved as draft, undo restores it', function () {
+	wpaie_test_add_post( [ 'ID' => 5, 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => 'O nás', 'post_content' => 'Starý text' ] );
+	check( wpaie_tool_needs_approval( 'update_post_content', [ 'post_id' => 5, 'content' => 'x' ], 'live' ), 'unpublishing a live page needs approval' );
+	check( str_contains( wpaie_tool_preview( 'update_post_content', [ 'post_id' => 5, 'title' => 'Kdo jsme' ] ), 'Kdo jsme' ), 'preview shows the new title' );
+
+	WPAIE_Run_Context::$changes = [];
+	$out = wpaie_run_tool( 'update_post_content', [ 'post_id' => 5, 'content' => 'Nový \\ text' ] );
+	check( is_string( $out ) && str_contains( $out, 'WARNING' ), 'model warned that the page went offline' );
+	check( get_post( 5 )->post_status === 'draft' && get_post( 5 )->post_content === 'Nový \\ text', 'saved as draft, backslash kept' );
+
+	check( wpaie_undo_change( WPAIE_Run_Context::$changes[0]['id'] ) === true, 'undo ok' );
+	check( get_post( 5 )->post_status === 'publish' && get_post( 5 )->post_content === 'Starý text', 'status and content restored' );
+} );
+
+test( 'search & replace: finds, previews, replaces across posts, undo restores all', function () {
+	wpaie_test_add_post( [ 'ID' => 1, 'post_status' => 'publish', 'post_title' => 'Akce ACME', 'post_content' => 'ACME s.r.o. a acme' ] );
+	wpaie_test_add_post( [ 'ID' => 2, 'post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Kontakt', 'post_content' => 'Napište ACME' ] );
+	wpaie_test_add_post( [ 'ID' => 3, 'post_title' => 'Jiné', 'post_content' => 'nic' ] );
+
+	$found = wpaie_tool_search_content( [ 'query' => 'acme' ] );
+	check( str_contains( $found, 'ID:1' ) && str_contains( $found, 'occurrences:3' ) && ! str_contains( $found, 'ID:3' ), 'search counts occurrences (title + content, case-insensitive)' );
+
+	$plan = wpaie_plan_replacement( [ 'search' => 'ACME', 'replace' => 'Acme Group' ] );
+	check( count( $plan ) === 2 && $plan[0]['count'] === 1, 'case-sensitive by default, titles untouched' );
+	check( str_contains( wpaie_tool_preview( 'replace_in_content', [ 'search' => 'ACME', 'replace' => 'X' ] ), '2 posts will change' ), 'preview lists affected posts' );
+	check( wpaie_tool_needs_approval( 'replace_in_content', [ 'search' => 'a', 'replace' => 'b' ], 'live' ), 'bulk replace always asks in live mode' );
+
+	WPAIE_Run_Context::$changes = [];
+	$out = wpaie_run_tool( 'replace_in_content', [ 'search' => 'acme', 'replace' => 'Acme Group', 'case_sensitive' => false, 'include_titles' => true ] );
+	check( str_contains( (string) $out, 'Replaced 4 occurrences in 2 posts' ), 'replaced in content and titles' );
+	check( get_post( 1 )->post_title === 'Akce Acme Group' && get_post( 1 )->post_status === 'publish', 'title replaced, status kept' );
+	check( count( WPAIE_Run_Context::$changes ) === 1, 'one change for the whole batch' );
+
+	wpaie_undo_change( WPAIE_Run_Context::$changes[0]['id'] );
+	check( get_post( 1 )->post_content === 'ACME s.r.o. a acme' && get_post( 2 )->post_content === 'Napište ACME' && get_post( 1 )->post_title === 'Akce ACME', 'undo restores every post' );
+} );
+
+test( 'media: alt texts in bulk, undo removes them again', function () {
+	update_post_meta( 12, '_wp_attachment_image_alt', 'staré' );
+	WPAIE_Run_Context::$changes = [];
+	$out = wpaie_run_tool( 'update_media_alt', [ 'items' => [ [ 'attachment_id' => 11, 'alt' => 'Logo firmy' ], [ 'attachment_id' => 12, 'alt' => 'Tým' ], [ 'attachment_id' => 99, 'alt' => 'x' ] ] ] );
+	check( str_contains( (string) $out, '#11, #12' ) && str_contains( (string) $out, 'Skipped: #99' ), 'non-images skipped' );
+	check( get_post_meta( 11, '_wp_attachment_image_alt' ) === 'Logo firmy', 'alt set' );
+	check( wpaie_tool_label( 'update_media_alt', [ 'items' => [ 1, 2 ] ] ) === 'Setting alt texts of %d images…' || str_contains( wpaie_tool_label( 'update_media_alt', [ 'items' => [ 1, 2 ] ] ), '2' ), 'plural label' );
+	wpaie_undo_change( WPAIE_Run_Context::$changes[0]['id'] );
+	check( get_post_meta( 11, '_wp_attachment_image_alt' ) === '' && get_post_meta( 12, '_wp_attachment_image_alt' ) === 'staré', 'undo: new alt removed, old alt restored' );
+} );
+
+test( 'media: get_image returns the image to the model via the Files API', function () {
+	wpaie_test_queue_response( 200, [ 'id' => 'file_img' ] );
+	WPAIE_Run_Context::$api_key = 'k';
+	WPAIE_Run_Context::$files   = [];
+	$out = wpaie_run_tool( 'get_image', [ 'attachment_id' => 11 ] );
+	check( is_array( $out ) && $out[1]['source']['file_id'] === 'file_img', 'image block in the tool result' );
+	check( WPAIE_Run_Context::$files === [ 11 => 'file_img' ], 'file id kept for the conversation' );
+} );
+
+test( 'optional tools: SEO and WooCommerce only when the plugin is active', function () {
+	$names = wpaie_available_tool_names();
+	check( ! in_array( 'update_seo', $names, true ) && ! in_array( 'update_product', $names, true ), 'hidden without the plugins' );
+
+	define( 'WPSEO_VERSION', '99' );
+	check( in_array( 'update_seo', wpaie_available_tool_names(), true ), 'SEO tools with Yoast' );
+	wpaie_test_add_post( [ 'ID' => 7, 'post_status' => 'publish', 'post_title' => 'Ceník' ] );
+	WPAIE_Run_Context::$changes = [];
+	wpaie_run_tool( 'update_seo', [ 'post_id' => 7, 'title' => 'Ceník služeb | Firma', 'description' => 'Popis' ] );
+	check( get_post_meta( 7, '_yoast_wpseo_title' ) === 'Ceník služeb | Firma', 'Yoast title meta written' );
+	check( wpaie_tool_is_live( 'update_seo', [ 'post_id' => 7 ] ), 'SEO of a published post is live' );
+	wpaie_undo_change( WPAIE_Run_Context::$changes[0]['id'] );
+	check( get_post_meta( 7, '_yoast_wpseo_title' ) === '' && get_post_meta( 7, '_yoast_wpseo_metadesc' ) === '', 'undo removes the SEO meta' );
+} );
+
 echo "\n" . ( $failures ? "$failures of $count checks FAILED\n" : "All $count checks passed\n" );
 exit( $failures ? 1 : 0 );

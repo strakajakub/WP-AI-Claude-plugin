@@ -8,7 +8,12 @@ A WordPress plugin that adds an AI assistant chat (Claude by Anthropic) to the a
 
 | Area | Read | Edit | Takes effect |
 |---|---|---|---|
-| Pages and posts | list, search, content | update, create | **as a draft** (published only when you explicitly ask) |
+| Pages and posts | list, search, content | update, create, excerpt | **as a draft** (published only when you explicitly ask) |
+| Categories and tags | list | set on a post (creates missing tags) | immediately |
+| Search & replace | find text in all posts and pages | replace in content (and titles) of up to 100 posts | immediately, keeps each post's status |
+| Media Library | list images (e.g. without alt text), look at an image | alt texts (up to 50 at once), featured image | immediately |
+| SEO (Yoast SEO / Rank Math, if active) | SEO title, meta description, focus keyword | SEO title, meta description | immediately |
+| WooCommerce (if active) | products, variations | name, descriptions, prices, sale price, stock, status | immediately |
 | Global styles (theme.json) | theme styles and user customizations | merge into `settings` / `styles` | immediately (revertible in Styles → Revisions) |
 | Block templates and template parts (FSE) | list, content | save a user copy | immediately (revertible in the Site Editor) |
 | Navigation menus | menus and items | add and rename items | immediately |
@@ -151,7 +156,7 @@ wp-ai-editor/              # the plugin itself (contents of the ZIP)
 │   ├── stream.php         # streaming (Anthropic SSE → browser SSE)
 │   ├── pricing.php        # cost estimates, monthly usage, budget
 │   ├── site-context.php   # theme detection, system prompt
-│   ├── tools/             # tool registry and tools (content, design, …)
+│   ├── tools/             # registry + content, taxonomy-search, media, seo, design, woocommerce
 │   ├── changes.php        # change log and undo
 │   ├── conversation.php   # history storage and compaction
 │   ├── agent.php          # a single agent step
