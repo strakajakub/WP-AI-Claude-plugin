@@ -8,6 +8,11 @@
 - Tools are defined in a registry with a capability, approval classification and preview per tool; the tool set is fixed per conversation.
 - Conversations are stored per conversation (format v3) with automatic migration of the 2.0 history.
 
+### Costs and streaming
+- Estimated cost per answer and per conversation, monthly usage table in Settings, and a monthly budget that stops the chat when it is used up.
+- Streaming ("Live answers", on by default): the answer appears as it is written; the Messages API is streamed over cURL and forwarded to the browser as server-sent events. Falls back to normal requests without cURL.
+- `WPAIE_API_BASE` can be overridden in wp-config.php (e.g. for a proxy).
+
 ## 2.0.0
 
 ### API and models

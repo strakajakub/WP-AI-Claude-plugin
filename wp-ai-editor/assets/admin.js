@@ -331,6 +331,10 @@
 				if (hooks.onStep) {
 					hooks.onStep(d);
 				}
+				var costEl = document.getElementById('wpaie-cost');
+				if (costEl && d.conversation_cost > 0) {
+					costEl.textContent = '$' + Number(d.conversation_cost).toFixed(4);
+				}
 				renderStep(d, ctx.live);
 				ctx.live = null;
 				turnCost += Number(d.cost || 0);

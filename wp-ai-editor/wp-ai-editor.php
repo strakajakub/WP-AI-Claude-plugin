@@ -45,6 +45,8 @@ add_action(
 require_once WPAIE_DIR . 'includes/helpers.php';
 require_once WPAIE_DIR . 'includes/settings.php';
 require_once WPAIE_DIR . 'includes/api.php';
+require_once WPAIE_DIR . 'includes/stream.php';
+require_once WPAIE_DIR . 'includes/pricing.php';
 require_once WPAIE_DIR . 'includes/site-context.php';
 require_once WPAIE_DIR . 'includes/tools/registry.php';
 require_once WPAIE_DIR . 'includes/tools/content.php';

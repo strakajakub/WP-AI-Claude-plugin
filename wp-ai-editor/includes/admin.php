@@ -90,7 +90,7 @@ function wpaie_js_config(): array {
 			'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
 			'nonce'        => wp_create_nonce( 'wpaie_nonce' ),
 			'conversation' => wpaie_active_conversation_id(),
-			'stream'       => false,
+			'stream'       => wpaie_can_stream(),
 			'i18n'         => wpaie_js_strings(),
 		]
 	);
@@ -109,6 +109,7 @@ function wpaie_render_chat_page(): void {
 			<span id="wpaie-logo" aria-hidden="true">✦</span>
 			<h1>AI Editor</h1>
 			<?php do_action( 'wpaie_chat_header', $state ); ?>
+			<span id="wpaie-cost" title="<?php esc_attr_e( 'Estimated cost of this conversation', 'wp-ai-editor' ); ?>"><?php echo $state['usage']['cost'] > 0 ? esc_html( wpaie_format_usd( (float) $state['usage']['cost'] ) ) : ''; ?></span>
 			<span id="wpaie-model-badge"><?php echo esc_html( $settings['model'] ); ?></span>
 			<button type="button" id="wpaie-new" class="wpaie-icon-btn" title="<?php esc_attr_e( 'New chat', 'wp-ai-editor' ); ?>" aria-label="<?php esc_attr_e( 'New chat', 'wp-ai-editor' ); ?>">＋</button>
 			<?php if ( current_user_can( WPAIE_CAPABILITY ) ) : ?>
@@ -378,6 +379,29 @@ function wpaie_render_settings_page(): void {
 							<?php endforeach; ?>
 						</select>
 						<p class="description"><?php esc_html_e( 'The assistant shows a preview of the change and waits for Apply or Reject. Every change can be undone in the History either way.', 'wp-ai-editor' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="wpaie-budget"><?php esc_html_e( 'Monthly budget (USD)', 'wp-ai-editor' ); ?></label></th>
+					<td>
+						<input type="number" id="wpaie-budget" name="<?php echo esc_attr( $name ); ?>[monthly_budget]" value="<?php echo esc_attr( (string) $settings['monthly_budget'] ); ?>" min="0" step="0.01" class="small-text" />
+						<p class="description"><?php esc_html_e( 'The chat stops when the estimated spending this month reaches this amount. 0 = no limit.', 'wp-ai-editor' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Live answers', 'wp-ai-editor' ); ?></th>
+					<td>
+						<label>
+							<input type="checkbox" name="<?php echo esc_attr( $name ); ?>[streaming]" value="1" <?php checked( $settings['streaming'] ); ?> <?php disabled( ! function_exists( 'curl_init' ) ); ?> />
+							<?php esc_html_e( 'Show the answer as it is written (streaming)', 'wp-ai-editor' ); ?>
+						</label>
+						<p class="description">
+							<?php
+							echo function_exists( 'curl_init' )
+								? esc_html__( 'Also keeps long answers from hitting hosting time limits. Turn it off if answers appear only at the end or never arrive (some proxies buffer the response).', 'wp-ai-editor' )
+								: esc_html__( 'Not available: the PHP cURL extension is missing on this server.', 'wp-ai-editor' );
+							?>
+						</p>
 					</td>
 				</tr>
 				<?php do_action( 'wpaie_settings_rows', $settings ); ?>

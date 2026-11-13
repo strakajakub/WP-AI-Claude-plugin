@@ -20,6 +20,14 @@ A WordPress plugin that adds an AI assistant chat (Claude by Anthropic) to the a
 - **Ask before changes:** before a change that is visible on the site immediately (styles, CSS, templates, menus, site identity, publishing), the chat shows a card with a preview (a diff of the content or template, the CSS or JSON to be applied, a table of old and new values) and waits for **Apply** or **Reject**. In Settings you can switch this to every change, including drafts, or turn it off.
 - **History of changes:** every change the assistant makes is logged with what is needed to restore the previous state. You can undo it right from the chat (the *Undo* link under the change) or from **AI Editor → History**. The log is kept for 180 days.
 
+### Costs
+
+- Every answer shows its estimated cost, and the chat header shows the cost of the whole conversation.
+- **AI Editor → Settings → Usage** shows the estimated spending per month (requests, tokens, cost).
+- **Monthly budget:** when the estimated spending this month reaches the limit, the chat stops until the next month or until an administrator raises the limit.
+
+Estimates use list prices (filter `wpaie_model_prices`); the bill in the Claude Console is authoritative.
+
 When a conversation starts, the assistant checks whether the site uses a block (FSE) or a classic theme and suggests solutions that fit. It cannot edit PHP files, install plugins or themes, or change Customizer settings other than site identity and CSS.
 
 ## Requirements
@@ -52,6 +60,8 @@ The constant takes precedence over a key saved in Settings.
 | Model | Claude Opus 5.5 | Fable 5.2 (most capable; slowest and most expensive), Opus 5.5 (best balance), Sonnet 5.5 (faster, cheaper), Haiku 5.5 (fastest, cheapest) |
 | Thinking effort | Medium | Low / Medium / High / Extra high. Higher effort is more careful but slower and more expensive. |
 | Ask before changes | Live changes | Live changes only / every change including drafts / never. |
+| Monthly budget (USD) | 0 (no limit) | The chat stops when the estimated spending this month reaches it. |
+| Live answers | On | Streams the answer as it is written. Needs the PHP cURL extension. |
 
 ### Claude Fable 5.2
 
@@ -77,6 +87,7 @@ add_filter( 'wpaie_models', function ( $models ) {
 
 - **Claude Messages API** (`anthropic-version: 2026-10-21`), called through the WordPress HTTP API (`wp_remote_request`). The official PHP SDK is not used on purpose: a plugin distributed as a ZIP would have to bundle Composer dependencies, which easily clash with other plugins.
 - **Adaptive thinking** (always on for Opus 5.5). The *Thinking effort* setting (`output_config.effort`) controls how deep it goes.
+- **Streaming:** with *Live answers* on, the Messages API is called with `stream=true` over cURL and the answer is passed to the browser as server-sent events while it is being written. Data keeps flowing during long answers, so proxies do not cut the request off. If the hosting buffers responses (answers appear only at the end), turn it off.
 - **One step per request:** each AJAX request runs one model call plus any tools, and then the browser asks for the next step. No single request has to survive the whole agent loop, so hosting time limits are not hit. Tool calls are shown live as they happen. A message gets at most 15 steps.
 - **History** is stored per user (user meta `wpaie_history`) and is only ever appended to. The system prompt is frozen when the conversation starts. This matters because Opus 5.5 binds its thinking blocks to the exact earlier conversation: editing earlier messages invalidates them, and for new accounts the API then returns a 400 error. Old tool results are therefore cleared on the API side (`context_management`). The local history is shrunk only between messages, and only when it grows past 400 kB.
 - **Optional beta features:** server-side clearing of old tool results, `drop_block` for invalid thinking blocks, and an automatic **fallback to another model** when a safety filter declines a request (Fable, Opus and Sonnet). If the API rejects them, the plugin switches to running without them for a day and carries on.
@@ -92,7 +103,9 @@ Errors are shown right in the chat, with the HTTP status and the `request-id` so
 | Your Anthropic account is out of credit | Top up in the Claude Console → Billing. |
 | Rate limit exceeded / API overloaded | The plugin retries automatically (up to 2 times). If it persists, wait a moment. |
 | The Anthropic API did not respond within 240 s | Split the task, lower the thinking effort, or choose a faster model. |
-| The website server stopped waiting for the AI (HTTP 502/504) | The hosting time limit (proxy/nginx) is shorter than the model's response time. Raise `proxy_read_timeout` / `max_execution_time`, or lower the thinking effort. |
+| The website server stopped waiting for the AI (HTTP 502/504) | The hosting time limit (proxy/nginx) is shorter than the model's response time. Turn on *Live answers*, raise `proxy_read_timeout` / `max_execution_time`, or lower the thinking effort. |
+| The monthly budget is used up | Raise the budget in Settings, or wait for the next month (UTC). |
+| Answers appear only at the end / never arrive | A proxy or plugin buffers the response. Turn off *Live answers* in Settings. |
 | This page has expired | Reload the page (F5). |
 | A previous request is still running | The chat is open in another tab. Wait for it to finish. |
 | The model declined this request (safety filter) | Rephrase the request or choose another model. |
@@ -127,6 +140,8 @@ wp-ai-editor/              # the plugin itself (contents of the ZIP)
 │   ├── helpers.php        # helpers, mini-markdown
 │   ├── settings.php       # settings (key, model, effort)
 │   ├── api.php            # Messages API client, retries, error mapping
+│   ├── stream.php         # streaming (Anthropic SSE → browser SSE)
+│   ├── pricing.php        # cost estimates, monthly usage, budget
 │   ├── site-context.php   # theme detection, system prompt
 │   ├── tools/             # tool registry and tools (content, design, …)
 │   ├── changes.php        # change log and undo
@@ -138,7 +153,7 @@ wp-ai-editor/              # the plugin itself (contents of the ZIP)
 tests/                     # dependency-free tests (WordPress stubs)
 ```
 
-Tests and syntax check:
+Tests and syntax check (the streaming test starts a fake API with `php -S` on port 8765):
 
 ```bash
 php tests/run.php

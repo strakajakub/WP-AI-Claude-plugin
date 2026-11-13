@@ -9,7 +9,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'WPAIE_API_BASE', 'https://api.anthropic.com/v1' );
+defined( 'WPAIE_API_BASE' ) || define( 'WPAIE_API_BASE', 'https://api.anthropic.com/v1' ); // Can be overridden in wp-config.php (e.g. a proxy).
 define( 'WPAIE_API_VERSION', '2026-10-21' );
 define( 'WPAIE_MAX_TOKENS', 16000 );     // Room for adaptive thinking + the reply.
 define( 'WPAIE_HTTP_TIMEOUT', 240 );     // Seconds for one Messages API call.
@@ -62,17 +62,17 @@ function wpaie_max_tokens( string $model ): int {
  */
 function wpaie_messages_create( string $api_key, string $model, string $effort, string $system, array $messages, array $tools, ?callable $emit = null ) {
 	$use_beta = ! get_transient( WPAIE_NO_BETA_TRANSIENT );
-	$result   = wpaie_send_messages_request( $api_key, $model, $effort, $system, $messages, $tools, $use_beta );
+	$result   = wpaie_send_messages_request( $api_key, $model, $effort, $system, $messages, $tools, $use_beta, $emit );
 
 	if ( $use_beta && is_wp_error( $result ) && wpaie_is_beta_rejection( $result ) ) {
 		wpaie_log( 'Beta features rejected, retrying without them.', [ 'error' => $result->get_error_message() ] );
 		set_transient( WPAIE_NO_BETA_TRANSIENT, 1, DAY_IN_SECONDS );
-		$result = wpaie_send_messages_request( $api_key, $model, $effort, $system, $messages, $tools, false );
+		$result = wpaie_send_messages_request( $api_key, $model, $effort, $system, $messages, $tools, false, $emit );
 	}
 	return $result;
 }
 
-function wpaie_send_messages_request( string $api_key, string $model, string $effort, string $system, array $messages, array $tools, bool $use_beta ) {
+function wpaie_send_messages_request( string $api_key, string $model, string $effort, string $system, array $messages, array $tools, bool $use_beta, ?callable $emit = null ) {
 	$payload = [
 		'model'         => $model,
 		'max_tokens'    => wpaie_max_tokens( $model ),
@@ -107,6 +107,16 @@ function wpaie_send_messages_request( string $api_key, string $model, string $ef
 		}
 	}
 
+	if ( $emit && function_exists( 'wpaie_can_stream' ) && wpaie_can_stream() ) {
+		return wpaie_api_stream_request(
+			$api_key,
+			$payload,
+			$betas,
+			wpaie_http_timeout( $model ),
+			fn( string $delta ) => $emit( 'text', [ 'delta' => $delta ] ),
+			fn() => $emit( 'ping', [] )
+		);
+	}
 	return wpaie_api_request( 'POST', '/messages', $api_key, $payload, $betas, wpaie_http_timeout( $model ) );
 }
 

@@ -168,7 +168,7 @@ test( 'agent step: tool call → result, verbatim replay, request shape', functi
 
 	$req = $GLOBALS['wp_test']['requests'][0];
 	$p   = last_payload();
-	check( $req['url'] === 'https://api.anthropic.com/v1/messages', 'messages endpoint' );
+	check( $req['url'] === WPAIE_API_BASE . '/messages', 'messages endpoint' );
 	check( $req['args']['headers']['anthropic-version'] === '2026-10-21', 'API version 2026-10-21' );
 	check( $p['model'] === 'claude-opus-5-5' && $p['thinking']['type'] === 'adaptive', 'model + adaptive thinking' );
 	check( $p['output_config']['effort'] === 'medium', 'effort set explicitly' );
@@ -361,6 +361,153 @@ test( 'tools the user may not use are not offered or run', function () {
 	$names = wpaie_available_tool_names();
 	check( in_array( 'update_post_content', $names, true ) && ! in_array( 'update_custom_css', $names, true ), 'design tools hidden' );
 	check( is_wp_error( wpaie_run_tool( 'update_custom_css', [ 'css' => 'a' ] ) ), 'and refused when called' );
+} );
+
+function sse( string $type, array $data ): string {
+	return "event: $type\ndata: " . json_encode( [ 'type' => $type ] + $data ) . "\n\n";
+}
+
+test( 'stream: SSE events are assembled into the same message as a non-streaming call', function () {
+	$stream = sse( 'message_start', [ 'message' => [ 'id' => 'msg_1', 'type' => 'message', 'role' => 'assistant', 'model' => 'claude-opus-5-5', 'content' => [], 'stop_reason' => null, 'usage' => [ 'input_tokens' => 10, 'output_tokens' => 1 ] ] ] )
+		. sse( 'content_block_start', [ 'index' => 0, 'content_block' => [ 'type' => 'thinking', 'thinking' => '', 'signature' => '' ] ] )
+		. sse( 'content_block_delta', [ 'index' => 0, 'delta' => [ 'type' => 'signature_delta', 'signature' => 'sig-' ] ] )
+		. sse( 'content_block_delta', [ 'index' => 0, 'delta' => [ 'type' => 'signature_delta', 'signature' => 'xyz' ] ] )
+		. sse( 'content_block_stop', [ 'index' => 0 ] )
+		. sse( 'ping', [] )
+		. sse( 'content_block_start', [ 'index' => 1, 'content_block' => [ 'type' => 'text', 'text' => '' ] ] )
+		. sse( 'content_block_delta', [ 'index' => 1, 'delta' => [ 'type' => 'text_delta', 'text' => 'Ahoj ' ] ] )
+		. sse( 'content_block_delta', [ 'index' => 1, 'delta' => [ 'type' => 'text_delta', 'text' => 'světe' ] ] )
+		. sse( 'content_block_stop', [ 'index' => 1 ] )
+		. sse( 'content_block_start', [ 'index' => 2, 'content_block' => [ 'type' => 'tool_use', 'id' => 't1', 'name' => 'get_custom_css', 'input' => new stdClass() ] ] )
+		. sse( 'content_block_stop', [ 'index' => 2 ] )
+		. sse( 'content_block_start', [ 'index' => 3, 'content_block' => [ 'type' => 'tool_use', 'id' => 't2', 'name' => 'update_custom_css', 'input' => new stdClass() ] ] )
+		. sse( 'content_block_delta', [ 'index' => 3, 'delta' => [ 'type' => 'input_json_delta', 'partial_json' => '{"css": "a{co' ] ] )
+		. sse( 'content_block_delta', [ 'index' => 3, 'delta' => [ 'type' => 'input_json_delta', 'partial_json' => 'lor:red}"}' ] ] )
+		. sse( 'content_block_stop', [ 'index' => 3 ] )
+		. sse( 'message_delta', [ 'delta' => [ 'stop_reason' => 'tool_use' ], 'usage' => [ 'output_tokens' => 42 ] ] )
+		. sse( 'message_stop', [] );
+
+	$texts  = [];
+	$pings  = 0;
+	$parser = new WPAIE_SSE_Message( function ( $d ) use ( &$texts ) { $texts[] = $d; }, function () use ( &$pings ) { $pings++; } );
+	// Feed in awkward chunks (split inside events and CRLF line endings).
+	foreach ( str_split( str_replace( "\n", "\r\n", $stream ), 7 ) as $chunk ) {
+		$parser->feed( $chunk );
+	}
+	$msg = $parser->result();
+	check( is_object( $msg ) && $msg->stop_reason === 'tool_use', 'complete message with stop_reason' );
+	check( implode( '', $texts ) === 'Ahoj světe' && $pings === 1, 'text deltas and pings forwarded' );
+	check( wp_json_encode( $msg->content[0] ) === '{"type":"thinking","thinking":"","signature":"sig-xyz"}', 'thinking block rebuilt verbatim' );
+	check( $msg->content[1]->text === 'Ahoj světe', 'text block' );
+	check( wp_json_encode( $msg->content[2]->input ) === '{}', 'empty tool input is an object' );
+	check( $msg->content[3]->input->css === 'a{color:red}', 'tool input assembled from JSON deltas' );
+	check( $msg->usage->input_tokens === 10 && $msg->usage->output_tokens === 42, 'usage merged' );
+	check( empty( $msg->wpaie_invalid_tool_input ), 'no invalid input flag' );
+} );
+
+test( 'stream: cut-off tool input and error events', function () {
+	$parser = new WPAIE_SSE_Message();
+	$parser->feed(
+		sse( 'message_start', [ 'message' => [ 'content' => [] ] ] )
+		. sse( 'content_block_start', [ 'index' => 0, 'content_block' => [ 'type' => 'tool_use', 'id' => 't', 'name' => 'x', 'input' => new stdClass() ] ] )
+		. sse( 'content_block_delta', [ 'index' => 0, 'delta' => [ 'type' => 'input_json_delta', 'partial_json' => '{"css": "a{' ] ] )
+		. sse( 'content_block_stop', [ 'index' => 0 ] )
+		. sse( 'message_delta', [ 'delta' => [ 'stop_reason' => 'max_tokens' ] ] )
+		. sse( 'message_stop', [] )
+	);
+	check( ! empty( $parser->result()->wpaie_invalid_tool_input ), 'cut-off JSON flagged, never guessed' );
+
+	$parser = new WPAIE_SSE_Message();
+	$parser->feed( sse( 'message_start', [ 'message' => [ 'content' => [] ] ] ) . sse( 'error', [ 'error' => [ 'type' => 'overloaded_error', 'message' => 'Overloaded' ] ] ) );
+	$err = $parser->result();
+	check( is_wp_error( $err ) && str_contains( $err->get_error_message(), 'overloaded' ), 'mid-stream error mapped' );
+
+	$parser = new WPAIE_SSE_Message();
+	$parser->feed( sse( 'message_start', [ 'message' => [ 'content' => [] ] ] ) );
+	check( is_wp_error( $parser->result() ), 'stream without message_stop is an error' );
+} );
+
+test( 'pricing: cost estimate, iterations, long-context tier', function () {
+	$usage = [ 'input_tokens' => 1000000, 'output_tokens' => 100000, 'cache_creation_input_tokens' => 0, 'cache_read_input_tokens' => 0 ];
+	check( abs( wpaie_usage_cost( 'claude-opus-5-5', $usage ) - 6.0 ) < 1e-9, 'Opus 5.5: $4 in + $2 out' );
+	check( abs( wpaie_usage_cost( 'claude-opus-5-5', [ 'cache_creation_input_tokens' => 1000000, 'cache_read_input_tokens' => 1000000 ] ) - 5.2 ) < 1e-9, 'cache write 1.25x, cache read price' );
+	check( abs( wpaie_usage_cost( 'claude-haiku-5-5', [ 'input_tokens' => 200000 ] ) - 0.1 ) < 1e-9, 'Haiku long-context input price' );
+	check( wpaie_usage_cost( 'unknown-model', $usage ) === 0.0, 'unknown model costs 0' );
+
+	$resp = json_decode( json_encode( [ 'model' => 'claude-opus-5', 'usage' => [ 'input_tokens' => 5, 'output_tokens' => 5, 'iterations' => [
+		[ 'type' => 'message', 'model' => 'claude-opus-5-5', 'input_tokens' => 1000000, 'output_tokens' => 0 ],
+		[ 'type' => 'fallback_message', 'model' => 'claude-opus-5', 'input_tokens' => 0, 'output_tokens' => 0 ],
+	] ] ] ) );
+	$u = wpaie_response_usage( $resp, 'claude-opus-5-5' );
+	check( abs( $u['cost'] - 4.0 ) < 1e-9 && $u['input'] === 1000000, 'iterations summed per model' );
+} );
+
+test( 'pricing: monthly totals and budget', function () {
+	$state = wpaie_empty_conversation();
+	$resp  = json_decode( json_encode( [ 'model' => 'claude-opus-5-5', 'usage' => [ 'input_tokens' => 1000000, 'output_tokens' => 0 ] ] ) );
+	$cost  = wpaie_track_response_usage( $state, $resp, 'claude-opus-5-5' );
+	check( abs( $cost - 4.0 ) < 1e-9 && abs( $state['usage']['cost'] - 4.0 ) < 1e-9, 'conversation cost' );
+	check( abs( wpaie_month_cost() - 4.0 ) < 1e-9 && wpaie_usage_by_month()[ gmdate( 'Y-m' ) ]['requests'] === 1, 'monthly total' );
+
+	check( wpaie_budget_error() === null, 'no budget = no limit' );
+	update_option( WPAIE_OPTION_KEY, [ 'monthly_budget' => 5 ] );
+	check( wpaie_budget_error() === null, 'under budget' );
+	update_option( WPAIE_OPTION_KEY, [ 'monthly_budget' => 3 ] );
+	check( wpaie_budget_error() instanceof WP_Error, 'over budget blocks' );
+
+	wpaie_test_queue_response( 200, api_message( [ [ 'type' => 'text', 'text' => 'x' ] ] ) );
+	$s2   = wpaie_conversation_add_user_text( wpaie_empty_conversation(), 'x' );
+	$step = wpaie_agent_step( $s2, settings(), 'k' );
+	check( is_wp_error( $step ) && $step->get_error_code() === 'wpaie_budget' && $GLOBALS['wp_test']['requests'] === [], 'agent stops before calling the API' );
+} );
+
+test( 'settings: budget and checkboxes', function () {
+	$out = wpaie_sanitize_settings( [ 'monthly_budget' => '12,5' ] );
+	check( $out['monthly_budget'] === 12.5, 'decimal comma accepted' );
+	check( $out['streaming'] === false && $out['allow_editors'] === false, 'unchecked boxes are false' );
+	check( wpaie_get_settings()['streaming'] === true, 'streaming on by default' );
+} );
+
+test( 'stream: real cURL request against a local fake API', function () {
+	if ( ! function_exists( 'curl_init' ) ) {
+		echo "  (skipped: no cURL)\n";
+		return;
+	}
+	$server = proc_open(
+		[ PHP_BINARY, '-S', '127.0.0.1:' . WPAIE_TEST_API_PORT, __DIR__ . '/fixtures/fake-api.php' ],
+		[ [ 'pipe', 'r' ], [ 'pipe', 'w' ], [ 'pipe', 'w' ] ],
+		$pipes
+	);
+	for ( $i = 0; $i < 50; $i++ ) {
+		$sock = @fsockopen( '127.0.0.1', WPAIE_TEST_API_PORT );
+		if ( $sock ) {
+			fclose( $sock );
+			break;
+		}
+		usleep( 100000 );
+	}
+
+	$texts = [];
+	$pings = 0;
+	$msg   = wpaie_api_stream_request(
+		'sk-ant-test',
+		[ 'model' => 'claude-opus-5-5', 'max_tokens' => 10, 'messages' => [] ],
+		[],
+		20,
+		function ( $d ) use ( &$texts ) { $texts[] = $d; },
+		function () use ( &$pings ) { $pings++; }
+	);
+	check( is_object( $msg ) && $msg->content[0]->text === 'Hotovo, změněno.', 'streamed answer assembled' );
+	check( count( $texts ) === 2 && $pings === 1, 'deltas arrive one by one' );
+	check( is_object( $msg ) && $msg->usage->output_tokens === 7, 'usage from message_delta' );
+
+	$start = microtime( true );
+	$err   = wpaie_api_stream_request( 'sk-ant-test', [ 'model' => 'x', 'metadata' => [ 'fail' => true ] ], [], 20, null, null );
+	check( is_wp_error( $err ) && str_contains( $err->get_error_message(), 'overloaded' ) && str_contains( $err->get_error_message(), 'req_fake' ), 'HTTP error mapped with request-id' );
+	check( microtime( true ) - $start >= 2, 'retried with retry-after before giving up' );
+
+	proc_terminate( $server );
+	proc_close( $server );
 } );
 
 echo "\n" . ( $failures ? "$failures of $count checks FAILED\n" : "All $count checks passed\n" );

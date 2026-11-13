@@ -10,6 +10,8 @@ define( 'DAY_IN_SECONDS', 86400 );
 define( 'WPAIE_FILE', dirname( __DIR__ ) . '/wp-ai-editor/wp-ai-editor.php' );
 define( 'WPAIE_OPTION_KEY', 'wpaie_settings' );
 define( 'WPAIE_CAPABILITY', 'manage_options' );
+define( 'WPAIE_TEST_API_PORT', 8765 );
+define( 'WPAIE_API_BASE', 'http://127.0.0.1:' . WPAIE_TEST_API_PORT . '/v1' );
 
 $GLOBALS['wp_test'] = [];
 

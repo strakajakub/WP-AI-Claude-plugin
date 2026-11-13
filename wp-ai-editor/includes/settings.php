@@ -58,12 +58,18 @@ function wpaie_get_settings(): array {
 	$settings = wp_parse_args(
 		is_array( $raw ) ? $raw : [],
 		[
-			'api_key'       => '',
-			'model'         => WPAIE_DEFAULT_MODEL,
-			'effort'        => WPAIE_DEFAULT_EFFORT,
-			'approval_mode' => WPAIE_DEFAULT_APPROVAL,
+			'api_key'        => '',
+			'model'          => WPAIE_DEFAULT_MODEL,
+			'effort'         => WPAIE_DEFAULT_EFFORT,
+			'approval_mode'  => WPAIE_DEFAULT_APPROVAL,
+			'monthly_budget' => 0.0,
+			'streaming'      => true,
+			'allow_editors'  => false,
 		]
 	);
+	$settings['monthly_budget'] = max( 0.0, (float) $settings['monthly_budget'] );
+	$settings['streaming']      = (bool) $settings['streaming'];
+	$settings['allow_editors']  = (bool) $settings['allow_editors'];
 
 	// Older versions stored retired model IDs (e.g. claude-opus-4-8) – move them to the default.
 	if ( ! isset( wpaie_models()[ $settings['model'] ] ) ) {
@@ -148,10 +154,14 @@ function wpaie_sanitize_settings( $input ): array {
 		$approval = WPAIE_DEFAULT_APPROVAL;
 	}
 
+	// Checkboxes are absent from the form data when unchecked.
 	return [
-		'api_key'       => $key,
-		'model'         => $model,
-		'effort'        => $effort,
-		'approval_mode' => $approval,
+		'api_key'        => $key,
+		'model'          => $model,
+		'effort'         => $effort,
+		'approval_mode'  => $approval,
+		'monthly_budget' => round( max( 0.0, (float) str_replace( ',', '.', (string) ( $input['monthly_budget'] ?? $old['monthly_budget'] ) ) ), 2 ),
+		'streaming'      => ! empty( $input['streaming'] ),
+		'allow_editors'  => ! empty( $input['allow_editors'] ),
 	];
 }
