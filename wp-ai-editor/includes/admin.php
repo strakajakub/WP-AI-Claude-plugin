@@ -411,6 +411,16 @@ function wpaie_render_settings_page(): void {
 						</p>
 					</td>
 				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Editors', 'wp-ai-editor' ); ?></th>
+					<td>
+						<label>
+							<input type="checkbox" name="<?php echo esc_attr( $name ); ?>[allow_editors]" value="1" <?php checked( $settings['allow_editors'] ); ?> />
+							<?php esc_html_e( 'Let editors use the chat', 'wp-ai-editor' ); ?>
+						</label>
+						<p class="description"><?php esc_html_e( 'Editors get only the tools their role allows: content, categories and tags, media, SEO. Styles, CSS, templates, menus and site identity stay with administrators. Editors can undo their own changes; the History and Settings stay admin-only.', 'wp-ai-editor' ); ?></p>
+					</td>
+				</tr>
 				<?php do_action( 'wpaie_settings_rows', $settings ); ?>
 			</table>
 			<?php submit_button( __( 'Save', 'wp-ai-editor' ) ); ?>

@@ -1,0 +1,1076 @@
+# Czech translation of WP AI Editor.
+# Copyright (C) 2026 Jakub Straka
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: WP AI Editor\n"
+"Language: cs_CZ\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"X-Domain: wp-ai-editor\n"
+
+#: wp-ai-editor/includes/admin.php:17
+msgid "Chat"
+msgstr "Chat"
+
+#: wp-ai-editor/includes/admin.php:18
+msgid "AI Editor — History"
+msgstr "AI Editor — Historie"
+
+#: wp-ai-editor/includes/admin.php:18
+msgid "History"
+msgstr "Historie"
+
+#: wp-ai-editor/includes/admin.php:19 wp-ai-editor/includes/admin.php:314
+msgid "AI Editor — Settings"
+msgstr "AI Editor — Nastavení"
+
+#: wp-ai-editor/includes/admin.php:19 wp-ai-editor/includes/admin.php:36 wp-ai-editor/includes/admin.php:117 wp-ai-editor/includes/admin.php:127
+msgid "Settings"
+msgstr "Nastavení"
+
+#: wp-ai-editor/includes/admin.php:45
+msgid "Could not reach the website server. Check your internet connection and try again."
+msgstr "Nepodařilo se spojit se serverem webu. Zkontroluj připojení k internetu a zkus to znovu."
+
+#: wp-ai-editor/includes/admin.php:46 wp-ai-editor/includes/ajax.php:50
+msgid "This page has expired. Please reload it (F5) and try again."
+msgstr "Platnost stránky vypršela. Obnov ji prosím (F5) a zkus to znovu."
+
+#: wp-ai-editor/includes/admin.php:47
+msgid "You are not logged in or the plugin is not active. Reload the page and log in."
+msgstr "Nejsi přihlášen(a) nebo plugin není aktivní. Obnov stránku a přihlas se."
+
+#. translators: %d: HTTP status code
+#: wp-ai-editor/includes/admin.php:49
+#, php-format
+msgid "The website server stopped waiting for the AI (hosting time limit, HTTP %d). Try a simpler request or a lower \"Thinking effort\" in Settings. Changes already made are saved – write \"continue\"."
+msgstr "Server webu nepočkal na odpověď AI (časový limit hostingu, HTTP %d). Zkus jednodušší požadavek nebo nižší „Úroveň přemýšlení“ v Nastavení. Už provedené změny zůstaly uložené – napiš „pokračuj“."
+
+#. translators: %d: HTTP status code
+#: wp-ai-editor/includes/admin.php:51
+#, php-format
+msgid "Error on the website server (HTTP %d). See the PHP error log for details (enable WP_DEBUG_LOG)."
+msgstr "Chyba na serveru webu (HTTP %d). Podrobnosti najdeš v PHP error logu (zapni WP_DEBUG_LOG)."
+
+#. translators: %d: HTTP status code
+#: wp-ai-editor/includes/admin.php:53
+#, php-format
+msgid "The server returned an unexpected response (HTTP %d)."
+msgstr "Server vrátil neočekávanou odpověď (HTTP %d)."
+
+#: wp-ai-editor/includes/admin.php:54
+msgid "The connection was interrupted before the answer finished. Changes already made are saved – write \"continue\"."
+msgstr "Spojení se přerušilo dřív, než odpověď doběhla. Už provedené změny zůstaly uložené – napiš „pokračuj“."
+
+#: wp-ai-editor/includes/admin.php:55
+msgid "Unknown error."
+msgstr "Neznámá chyba."
+
+#: wp-ai-editor/includes/admin.php:56
+msgid "Start a new chat? The current one stays in the list."
+msgstr "Začít nový chat? Současný zůstane v seznamu."
+
+#: wp-ai-editor/includes/admin.php:57
+msgid "Delete this conversation?"
+msgstr "Smazat tuto konverzaci?"
+
+#: wp-ai-editor/includes/admin.php:58
+msgid "Undo this change? Anything changed in the same place since then will be overwritten."
+msgstr "Vrátit tuto změnu? Cokoli, co se od té doby změnilo na stejném místě, bude přepsáno."
+
+#: wp-ai-editor/includes/admin.php:59
+msgid "Testing…"
+msgstr "Testuji…"
+
+#: wp-ai-editor/includes/admin.php:60 wp-ai-editor/includes/admin.php:217
+msgid "The assistant wants to make this change:"
+msgstr "Asistent chce provést tuto změnu:"
+
+#: wp-ai-editor/includes/admin.php:61 wp-ai-editor/includes/admin.php:222
+msgid "live on the site"
+msgstr "živě na webu"
+
+#: wp-ai-editor/includes/admin.php:62 wp-ai-editor/includes/admin.php:228
+msgid "Apply"
+msgstr "Použít"
+
+#: wp-ai-editor/includes/admin.php:63 wp-ai-editor/includes/admin.php:229
+msgid "Reject"
+msgstr "Zamítnout"
+
+#: wp-ai-editor/includes/admin.php:64
+msgid "Approved"
+msgstr "Schváleno"
+
+#: wp-ai-editor/includes/admin.php:65
+msgid "Rejected"
+msgstr "Zamítnuto"
+
+#: wp-ai-editor/includes/admin.php:66 wp-ai-editor/includes/admin.php:206 wp-ai-editor/includes/admin.php:278
+msgid "Undo"
+msgstr "Vrátit"
+
+#: wp-ai-editor/includes/admin.php:67 wp-ai-editor/includes/admin.php:276
+msgid "Undone"
+msgstr "Vráceno"
+
+#. translators: %s: cost in USD
+#: wp-ai-editor/includes/admin.php:69
+#, php-format
+msgid "≈ $%s"
+msgstr "≈ $%s"
+
+#: wp-ai-editor/includes/admin.php:112
+msgid "Estimated cost of this conversation"
+msgstr "Odhadovaná cena této konverzace"
+
+#: wp-ai-editor/includes/admin.php:114 wp-ai-editor/includes/integrations.php:22
+msgid "New chat"
+msgstr "Nový chat"
+
+#: wp-ai-editor/includes/admin.php:116
+msgid "History of changes"
+msgstr "Historie změn"
+
+#. translators: %s: link to the settings page
+#: wp-ai-editor/includes/admin.php:126
+#, php-format
+msgid "Set your Anthropic API key in %s first."
+msgstr "Nejdřív nastav API klíč Anthropic v %s."
+
+#: wp-ai-editor/includes/admin.php:137
+msgid "Hi! I am the AI assistant for managing this site. I can edit:"
+msgstr "Ahoj! Jsem AI asistent pro správu tohoto webu. Umím upravovat:"
+
+#: wp-ai-editor/includes/admin.php:138
+msgid "content"
+msgstr "obsah"
+
+#: wp-ai-editor/includes/admin.php:138
+msgid "pages and posts (saved as drafts), categories, tags, search & replace,"
+msgstr "stránky a příspěvky (ukládám jako koncepty), kategorie, štítky, hledání a nahrazování,"
+
+#: wp-ai-editor/includes/admin.php:139
+msgid "images"
+msgstr "obrázky"
+
+#: wp-ai-editor/includes/admin.php:139
+msgid "alt texts, featured images; you can also send me a screenshot,"
+msgstr "alt texty, náhledové obrázky; můžeš mi poslat i screenshot,"
+
+#: wp-ai-editor/includes/admin.php:141
+msgid "SEO"
+msgstr "SEO"
+
+#: wp-ai-editor/includes/admin.php:141
+msgid "SEO titles and meta descriptions,"
+msgstr "SEO titulky a meta popisky,"
+
+#: wp-ai-editor/includes/admin.php:144
+msgid "products"
+msgstr "produkty"
+
+#: wp-ai-editor/includes/admin.php:144
+msgid "descriptions, prices, sales and stock,"
+msgstr "popisy, ceny, slevy a sklad,"
+
+#: wp-ai-editor/includes/admin.php:146
+msgid "styles"
+msgstr "styly"
+
+#: wp-ai-editor/includes/admin.php:146
+msgid "global styles (theme.json) and Additional CSS,"
+msgstr "globální styly (theme.json) a Doplňkový CSS,"
+
+#: wp-ai-editor/includes/admin.php:147
+msgid "templates"
+msgstr "šablony"
+
+#: wp-ai-editor/includes/admin.php:147
+msgid "block templates (FSE),"
+msgstr "block templates (FSE),"
+
+#: wp-ai-editor/includes/admin.php:148
+msgid "menus and site identity"
+msgstr "menu a identitu webu"
+
+#: wp-ai-editor/includes/admin.php:148
+msgid "menu items, logo, site title."
+msgstr "položky menu, logo, název webu."
+
+#: wp-ai-editor/includes/admin.php:149
+msgid "Write to me in any language."
+msgstr "Piš mi v jakémkoli jazyce."
+
+#: wp-ai-editor/includes/admin.php:165
+msgid "Message for the AI assistant"
+msgstr "Zpráva pro AI asistenta"
+
+#: wp-ai-editor/includes/admin.php:166
+msgid "What should I change? E.g. \"Change the primary button color to #e63946\"…"
+msgstr "Co mám upravit? Např. „Změň barvu primárního tlačítka na #e63946“…"
+
+#: wp-ai-editor/includes/admin.php:167
+msgid "Send"
+msgstr "Odeslat"
+
+#: wp-ai-editor/includes/admin.php:172
+msgid "Enter sends, Shift+Enter adds a new line. Every change can be undone in the chat or in the History."
+msgstr "Enter odešle, Shift+Enter nový řádek. Každou změnu jde vrátit v chatu nebo v Historii."
+
+#: wp-ai-editor/includes/admin.php:245
+msgid "AI Editor — History of changes"
+msgstr "AI Editor — Historie změn"
+
+#. translators: %d: number of days
+#: wp-ai-editor/includes/admin.php:250
+#, php-format
+msgid "Every change the assistant made, newest first. Changes are kept for %d days."
+msgstr "Všechny změny, které asistent udělal, od nejnovější. Změny se uchovávají %d dní."
+
+#: wp-ai-editor/includes/admin.php:258
+msgid "When"
+msgstr "Kdy"
+
+#: wp-ai-editor/includes/admin.php:259
+msgid "User"
+msgstr "Uživatel"
+
+#: wp-ai-editor/includes/admin.php:260
+msgid "Change"
+msgstr "Změna"
+
+#: wp-ai-editor/includes/admin.php:266
+msgid "No changes yet."
+msgstr "Zatím žádné změny."
+
+#: wp-ai-editor/includes/admin.php:321
+msgid "Anthropic API key"
+msgstr "API klíč Anthropic"
+
+#. translators: %s: constant name
+#: wp-ai-editor/includes/admin.php:329
+#, php-format
+msgid "The key is set by the %s constant in wp-config.php"
+msgstr "Klíč je nastaven konstantou %s v wp-config.php"
+
+#. translators: %s: masked API key
+#: wp-ai-editor/includes/admin.php:339
+#, php-format
+msgid "Saved: %s — fill in only to change it"
+msgstr "Uložen: %s — vyplň jen pro změnu"
+
+#: wp-ai-editor/includes/admin.php:341
+msgid "Remove the saved key"
+msgstr "Odebrat uložený klíč"
+
+#. translators: %s: link to the Claude Console
+#: wp-ai-editor/includes/admin.php:347
+#, php-format
+msgid "Create a key in the %s."
+msgstr "Klíč vytvoříš v %s."
+
+#: wp-ai-editor/includes/admin.php:351
+msgid "More secure alternative: add this to wp-config.php:"
+msgstr "Bezpečnější alternativa: přidej do wp-config.php:"
+
+#: wp-ai-editor/includes/admin.php:358
+msgid "Model"
+msgstr "Model"
+
+#: wp-ai-editor/includes/admin.php:365
+msgid "Claude Fable 5.2 costs about twice as much as Opus 5.5 and one answer can take several minutes; it requires 30-day data retention on your Anthropic organization (not available with zero data retention)."
+msgstr "Claude Fable 5.2 stojí zhruba dvakrát víc než Opus 5.5 a jedna odpověď může trvat i několik minut; vyžaduje 30denní uchovávání dat v organizaci Anthropic (nefunguje s nulovým uchováváním dat)."
+
+#: wp-ai-editor/includes/admin.php:369
+msgid "Thinking effort"
+msgstr "Úroveň přemýšlení"
+
+#: wp-ai-editor/includes/admin.php:376
+msgid "Higher effort means more careful work, but longer waits and higher cost."
+msgstr "Vyšší úroveň znamená pečlivější práci, ale delší čekání a vyšší cenu."
+
+#: wp-ai-editor/includes/admin.php:377
+msgid "With Claude Fable 5.2, start with High."
+msgstr "U Claude Fable 5.2 začni na Vysoké."
+
+#: wp-ai-editor/includes/admin.php:381
+msgid "Ask before changes"
+msgstr "Ptát se před změnami"
+
+#: wp-ai-editor/includes/admin.php:388
+msgid "The assistant shows a preview of the change and waits for Apply or Reject. Every change can be undone in the History either way."
+msgstr "Asistent ukáže náhled změny a počká na Použít nebo Zamítnout. Každou změnu jde v každém případě vrátit v Historii."
+
+#: wp-ai-editor/includes/admin.php:392
+msgid "Monthly budget (USD)"
+msgstr "Měsíční rozpočet (USD)"
+
+#: wp-ai-editor/includes/admin.php:395
+msgid "The chat stops when the estimated spending this month reaches this amount. 0 = no limit."
+msgstr "Chat se zastaví, když odhadované útraty za tento měsíc dosáhnou této částky. 0 = bez limitu."
+
+#: wp-ai-editor/includes/admin.php:399
+msgid "Live answers"
+msgstr "Živé odpovědi"
+
+#: wp-ai-editor/includes/admin.php:403
+msgid "Show the answer as it is written (streaming)"
+msgstr "Zobrazovat odpověď průběžně, jak vzniká (streaming)"
+
+#: wp-ai-editor/includes/admin.php:408
+msgid "Also keeps long answers from hitting hosting time limits. Turn it off if answers appear only at the end or never arrive (some proxies buffer the response)."
+msgstr "Také brání tomu, aby dlouhé odpovědi narazily na časové limity hostingu. Vypni, pokud se odpovědi objevují až na konci nebo vůbec (některé proxy odpověď bufferují)."
+
+#: wp-ai-editor/includes/admin.php:409
+msgid "Not available: the PHP cURL extension is missing on this server."
+msgstr "Nedostupné: na serveru chybí PHP rozšíření cURL."
+
+#: wp-ai-editor/includes/admin.php:415
+msgid "Editors"
+msgstr "Editoři"
+
+#: wp-ai-editor/includes/admin.php:419
+msgid "Let editors use the chat"
+msgstr "Povolit chat i editorům"
+
+#: wp-ai-editor/includes/admin.php:421
+msgid "Editors get only the tools their role allows: content, categories and tags, media, SEO. Styles, CSS, templates, menus and site identity stay with administrators. Editors can undo their own changes; the History and Settings stay admin-only."
+msgstr "Editoři dostanou jen nástroje, které jejich role dovoluje: obsah, kategorie a štítky, média, SEO. Styly, CSS, šablony, menu a identita webu zůstávají administrátorům. Editoři můžou vracet své vlastní změny; Historie a Nastavení zůstávají jen pro administrátory."
+
+#: wp-ai-editor/includes/admin.php:426
+msgid "Save"
+msgstr "Uložit"
+
+#: wp-ai-editor/includes/admin.php:431
+msgid "Connection test"
+msgstr "Test připojení"
+
+#: wp-ai-editor/includes/admin.php:432
+msgid "Checks the saved key and that the selected model is available (save your changes first)."
+msgstr "Ověří uložený klíč a dostupnost zvoleného modelu (nejdřív ulož změny)."
+
+#: wp-ai-editor/includes/admin.php:434
+msgid "Test connection"
+msgstr "Otestovat připojení"
+
+#: wp-ai-editor/includes/agent.php:42 wp-ai-editor/includes/ajax.php:189
+msgid "Please approve or reject the proposed change first."
+msgstr "Nejdřív prosím schval nebo zamítni navrženou změnu."
+
+#. translators: %d: maximum number of agent steps
+#: wp-ai-editor/includes/agent.php:50
+#, php-format
+msgid "I reached the limit of %d steps for one message. Write \"continue\" if I should carry on with the task."
+msgstr "Dosáhl jsem limitu %d kroků pro jednu zprávu. Napiš „pokračuj“, pokud mám v úkolu pokračovat."
+
+#. translators: %s: refusal category reported by the API, e.g. "cyber"
+#: wp-ai-editor/includes/agent.php:89
+#, php-format
+msgid "The model declined this request (safety filter: %s)."
+msgstr "Model tuto žádost odmítl (bezpečnostní filtr: %s)."
+
+#: wp-ai-editor/includes/agent.php:90
+msgid "The model declined this request (safety filter)."
+msgstr "Model tuto žádost odmítl (bezpečnostní filtr)."
+
+#: wp-ai-editor/includes/agent.php:91
+msgid "Try rephrasing it or choose another model in Settings."
+msgstr "Zkus ji přeformulovat nebo v Nastavení vyber jiný model."
+
+#: wp-ai-editor/includes/agent.php:107
+msgid "The model response was cut off in the middle of a tool call (response length limit). Please split the task into smaller steps, e.g. edit the content in parts."
+msgstr "Odpověď modelu se přerušila uprostřed volání nástroje (limit délky odpovědi). Rozděl prosím úkol na menší kroky, např. upravuj obsah po částech."
+
+#: wp-ai-editor/includes/agent.php:112
+msgid "The model returned no answer. Please try again or rephrase your message."
+msgstr "Model nevrátil žádnou odpověď. Zkus to prosím znovu nebo zprávu přeformuluj."
+
+#: wp-ai-editor/includes/agent.php:123
+msgid "The answer was cut short (length limit reached). Write \"continue\" for the rest."
+msgstr "Odpověď byla zkrácena (dosažen limit délky). Napiš „pokračuj“ pro zbytek."
+
+#: wp-ai-editor/includes/agent.php:160
+msgid "There is no change waiting for approval."
+msgstr "Žádná změna nečeká na schválení."
+
+#: wp-ai-editor/includes/ajax.php:53
+msgid "You are not allowed to use AI Editor."
+msgstr "Na použití AI Editoru nemáš oprávnění."
+
+#: wp-ai-editor/includes/ajax.php:60
+msgid "The Anthropic API key is missing. Set it in AI Editor → Settings."
+msgstr "Chybí API klíč Anthropic. Nastav ho v AI Editor → Nastavení."
+
+#: wp-ai-editor/includes/ajax.php:71
+msgid "A previous request is still running (maybe in another tab). Please wait for it to finish."
+msgstr "Předchozí požadavek ještě běží (možná v jiné záložce). Počkej prosím, než doběhne."
+
+#: wp-ai-editor/includes/ajax.php:132
+msgid "The message is empty."
+msgstr "Zpráva je prázdná."
+
+#. translators: %d: maximum number of characters
+#: wp-ai-editor/includes/ajax.php:138
+#, php-format
+msgid "The message is too long (max. %d characters). Please split it into smaller parts."
+msgstr "Zpráva je příliš dlouhá (max. %d znaků). Rozděl ji prosím na menší části."
+
+#: wp-ai-editor/includes/ajax.php:192
+msgid "There is nothing to continue – send a new message."
+msgstr "Není co dokončovat – pošli novou zprávu."
+
+#: wp-ai-editor/includes/ajax.php:200
+msgid "Changes made in the previous steps are saved – write \"continue\" to finish the task."
+msgstr "Změny z předchozích kroků zůstaly uložené – napiš „pokračuj“ pro dokončení úkolu."
+
+#: wp-ai-editor/includes/ajax.php:235
+msgid "The change was undone."
+msgstr "Změna byla vrácena."
+
+#: wp-ai-editor/includes/ajax.php:250
+msgid "This conversation no longer exists."
+msgstr "Tato konverzace už neexistuje."
+
+#: wp-ai-editor/includes/api.php:165 wp-ai-editor/includes/stream.php:203
+msgid "The request could not be encoded as JSON (invalid characters in the content?)."
+msgstr "Požadavek se nepodařilo převést do JSON (neplatné znaky v obsahu?)."
+
+#: wp-ai-editor/includes/api.php:189
+msgid "The Anthropic API returned an invalid (non-JSON) response. Please try again."
+msgstr "Anthropic API vrátilo neplatnou odpověď (nejde o JSON). Zkus to prosím znovu."
+
+#. translators: %d: timeout in seconds
+#: wp-ai-editor/includes/api.php:229
+#, php-format
+msgid "The Anthropic API did not respond within %d s. Split the request into smaller steps, lower the \"Thinking effort\" in Settings, or choose a faster model."
+msgstr "Anthropic API neodpovědělo do %d s. Rozděl požadavek na menší kroky, sniž „Úroveň přemýšlení“ v Nastavení nebo zvol rychlejší model."
+
+#: wp-ai-editor/includes/api.php:236
+msgid "The server cannot resolve api.anthropic.com (DNS). Check that the server can reach the internet and that the hosting firewall allows it."
+msgstr "Server nemůže přeložit adresu api.anthropic.com (DNS). Zkontroluj, že se server dostane na internet a že to firewall hostingu dovoluje."
+
+#: wp-ai-editor/includes/api.php:239
+msgid "Secure connection (SSL) to api.anthropic.com failed. The hosting probably has outdated CA certificates or OpenSSL. Details:"
+msgstr "Zabezpečené spojení (SSL) s api.anthropic.com selhalo. Hosting má nejspíš zastaralé certifikáty nebo OpenSSL. Detail:"
+
+#: wp-ai-editor/includes/api.php:241
+msgid "Could not connect to the Anthropic API:"
+msgstr "Nepodařilo se spojit s Anthropic API:"
+
+#: wp-ai-editor/includes/api.php:252
+msgid "An image in this conversation is no longer available (e.g. the API key was changed). Start a new chat."
+msgstr "Obrázek v této konverzaci už není dostupný (např. se změnil API klíč). Začni nový chat."
+
+#: wp-ai-editor/includes/api.php:254
+msgid "This model requires 30-day data retention, which your Anthropic organization does not have (e.g. zero data retention). Choose another model in Settings."
+msgstr "Tento model vyžaduje 30denní uchovávání dat, které tvoje organizace Anthropic nemá (např. nulové uchovávání dat). Vyber jiný model v Nastavení."
+
+#: wp-ai-editor/includes/api.php:256
+msgid "Your Anthropic account is out of credit. Top it up in the Claude Console (Settings → Billing)."
+msgstr "Na účtu Anthropic došel kredit. Dobij ho v Claude Console (Settings → Billing)."
+
+#: wp-ai-editor/includes/api.php:259
+msgid "Invalid API key. Check it in AI Editor → Settings."
+msgstr "Neplatný API klíč. Zkontroluj ho v AI Editor → Nastavení."
+
+#: wp-ai-editor/includes/api.php:260
+msgid "Billing problem on your Anthropic account. Check your payment details in the Claude Console."
+msgstr "Problém s fakturací účtu Anthropic. Zkontroluj platební údaje v Claude Console."
+
+#: wp-ai-editor/includes/api.php:261
+msgid "The API key is not allowed to perform this action or to use the selected model."
+msgstr "API klíč nemá oprávnění k této akci nebo ke zvolenému modelu."
+
+#: wp-ai-editor/includes/api.php:262
+msgid "The selected model was not found or your account has no access to it. Choose another model in Settings."
+msgstr "Zvolený model nebyl nalezen nebo k němu tvůj účet nemá přístup. Vyber jiný model v Nastavení."
+
+#: wp-ai-editor/includes/api.php:263
+msgid "The conversation is too large for the API. Start a new chat (＋ at the top right)."
+msgstr "Konverzace je pro API příliš velká. Začni nový chat (＋ vpravo nahoře)."
+
+#: wp-ai-editor/includes/api.php:264
+msgid "Anthropic API rate limit exceeded. Wait a moment and try again."
+msgstr "Překročen limit požadavků na Anthropic API. Počkej chvíli a zkus to znovu."
+
+#: wp-ai-editor/includes/api.php:265
+msgid "The Anthropic API is currently overloaded. Please try again in a moment."
+msgstr "Anthropic API je momentálně přetížené. Zkus to prosím za chvíli."
+
+#: wp-ai-editor/includes/api.php:266
+msgid "Temporary error on the Anthropic API side. Please try again."
+msgstr "Dočasná chyba na straně Anthropic API. Zkus to prosím znovu."
+
+#: wp-ai-editor/includes/api.php:267
+msgid "The Anthropic API rejected the request."
+msgstr "Anthropic API odmítlo požadavek."
+
+#: wp-ai-editor/includes/api.php:295
+msgid "No API key is set."
+msgstr "Není nastaven API klíč."
+
+#. translators: %s: model name
+#: wp-ai-editor/includes/api.php:304
+#, php-format
+msgid "Connection works. The key is valid and the model \"%s\" is available."
+msgstr "Spojení funguje. Klíč je platný a model „%s“ je dostupný."
+
+#: wp-ai-editor/includes/api.php:319
+msgid "The image file could not be read on the server."
+msgstr "Soubor obrázku se na serveru nepodařilo přečíst."
+
+#: wp-ai-editor/includes/api.php:344
+msgid "The Files API did not return a file ID."
+msgstr "Files API nevrátilo ID souboru."
+
+#: wp-ai-editor/includes/changes.php:148
+msgid "This change was not found in the history."
+msgstr "Tato změna nebyla v historii nalezena."
+
+#: wp-ai-editor/includes/changes.php:151
+msgid "You are not allowed to undo this change."
+msgstr "Tuto změnu nemáš oprávnění vrátit."
+
+#: wp-ai-editor/includes/changes.php:154
+msgid "This change has already been undone."
+msgstr "Tato změna už byla vrácena."
+
+#: wp-ai-editor/includes/changes.php:159
+msgid "The undo data for this change is damaged."
+msgstr "Data pro vrácení této změny jsou poškozená."
+
+#. translators: %s: error message
+#: wp-ai-editor/includes/changes.php:169
+#, php-format
+msgid "Undo failed: %s"
+msgstr "Vrácení selhalo: %s"
+
+#: wp-ai-editor/includes/images.php:28
+msgid "You are not allowed to upload files."
+msgstr "Nemáš oprávnění nahrávat soubory."
+
+#: wp-ai-editor/includes/images.php:34
+msgid "No image was received."
+msgstr "Nepřišel žádný obrázek."
+
+#: wp-ai-editor/includes/images.php:47
+msgid "Only JPEG, PNG, GIF and WebP images can be attached."
+msgstr "Připojit lze jen obrázky JPEG, PNG, GIF a WebP."
+
+#: wp-ai-editor/includes/images.php:50
+msgid "The image is too large (max. 5 MB)."
+msgstr "Obrázek je příliš velký (max. 5 MB)."
+
+#. translators: %s: error message
+#: wp-ai-editor/includes/images.php:61
+#, php-format
+msgid "The image could not be saved: %s"
+msgstr "Obrázek se nepodařilo uložit: %s"
+
+#. translators: %d: maximum number of images
+#: wp-ai-editor/includes/images.php:155 wp-ai-editor/includes/integrations.php:91
+#, php-format
+msgid "You can attach at most %d images to one message."
+msgstr "K jedné zprávě můžeš připojit nejvýš %d obrázků."
+
+#: wp-ai-editor/includes/images.php:161
+msgid "You are not allowed to use one of the attached images."
+msgstr "Jeden z připojených obrázků nemáš oprávnění použít."
+
+#. translators: %s: error message
+#: wp-ai-editor/includes/images.php:168
+#, php-format
+msgid "The image could not be sent to the AI: %s"
+msgstr "Obrázek se nepodařilo poslat AI: %s"
+
+#: wp-ai-editor/includes/integrations.php:19
+msgid "Conversation"
+msgstr "Konverzace"
+
+#: wp-ai-editor/includes/integrations.php:26
+msgid "(untitled)"
+msgstr "(bez názvu)"
+
+#: wp-ai-editor/includes/integrations.php:31
+msgid "Delete this conversation"
+msgstr "Smazat tuto konverzaci"
+
+#: wp-ai-editor/includes/integrations.php:46
+msgid "Attach an image (or paste / drop it)"
+msgstr "Připojit obrázek (nebo ho vlož / přetáhni)"
+
+#: wp-ai-editor/includes/integrations.php:46
+msgid "Attach an image"
+msgstr "Připojit obrázek"
+
+#: wp-ai-editor/includes/integrations.php:94
+msgid "Uploading image…"
+msgstr "Nahrávám obrázek…"
+
+#: wp-ai-editor/includes/integrations.php:95
+msgid "Remove"
+msgstr "Odebrat"
+
+#. translators: %s: post title
+#: wp-ai-editor/includes/integrations.php:97 wp-ai-editor/includes/integrations.php:115
+#, php-format
+msgid "Context: %s"
+msgstr "Kontext: %s"
+
+#: wp-ai-editor/includes/integrations.php:158
+msgid "After the assistant changes this post, reload the editor to see the change. Save your own edits first."
+msgstr "Až asistent tento příspěvek změní, obnov editor, abys změnu viděl(a). Své vlastní úpravy nejdřív ulož."
+
+#: wp-ai-editor/includes/integrations.php:191
+msgid "Ask the AI assistant about this page"
+msgstr "Zeptat se AI asistenta na tuto stránku"
+
+#. translators: 1: spent amount in USD, 2: monthly budget in USD
+#: wp-ai-editor/includes/pricing.php:161
+#, php-format
+msgid "The monthly budget is used up ($%1$s of $%2$s). An administrator can raise it in AI Editor → Settings; it resets at the start of the month (UTC)."
+msgstr "Měsíční rozpočet je vyčerpaný ($%1$s z $%2$s). Administrátor ho může zvýšit v AI Editor → Nastavení; obnoví se na začátku měsíce (UTC)."
+
+#: wp-ai-editor/includes/pricing.php:180
+msgid "Usage"
+msgstr "Spotřeba"
+
+#. translators: %s: amount in USD
+#: wp-ai-editor/includes/pricing.php:185
+#, php-format
+msgid "Estimated spending this month: %s"
+msgstr "Odhadované útraty za tento měsíc: %s"
+
+#. translators: 1: budget in USD, 2: percentage used
+#: wp-ai-editor/includes/pricing.php:192
+#, php-format
+msgid "of the %1$s budget (%2$s %%)."
+msgstr "z rozpočtu %1$s (%2$s %%)."
+
+#: wp-ai-editor/includes/pricing.php:206
+msgid "Month"
+msgstr "Měsíc"
+
+#: wp-ai-editor/includes/pricing.php:207
+msgid "Requests"
+msgstr "Požadavky"
+
+#: wp-ai-editor/includes/pricing.php:208
+msgid "Input tokens"
+msgstr "Vstupní tokeny"
+
+#: wp-ai-editor/includes/pricing.php:209
+msgid "Output tokens"
+msgstr "Výstupní tokeny"
+
+#: wp-ai-editor/includes/pricing.php:210
+msgid "Estimated cost"
+msgstr "Odhadovaná cena"
+
+#: wp-ai-editor/includes/pricing.php:226
+msgid "Estimate based on list prices; your bill in the Claude Console is authoritative."
+msgstr "Odhad podle ceníku; rozhodující je vyúčtování v Claude Console."
+
+#: wp-ai-editor/includes/settings.php:19
+msgid "Changes visible on the site immediately (recommended)"
+msgstr "Změny viditelné na webu ihned (doporučeno)"
+
+#: wp-ai-editor/includes/settings.php:20
+msgid "Every change, including drafts"
+msgstr "Každá změna, i koncepty"
+
+#: wp-ai-editor/includes/settings.php:21
+msgid "Never — the assistant makes changes without asking"
+msgstr "Nikdy — asistent mění bez ptaní"
+
+#: wp-ai-editor/includes/settings.php:34
+msgid "Claude Fable 5.2 — most capable; slowest and most expensive"
+msgstr "Claude Fable 5.2 — nejschopnější; nejpomalejší a nejdražší"
+
+#: wp-ai-editor/includes/settings.php:35
+msgid "Claude Opus 5.5 — best balance (recommended)"
+msgstr "Claude Opus 5.5 — nejlepší poměr (doporučeno)"
+
+#: wp-ai-editor/includes/settings.php:36
+msgid "Claude Sonnet 5.5 — faster and cheaper"
+msgstr "Claude Sonnet 5.5 — rychlejší a levnější"
+
+#: wp-ai-editor/includes/settings.php:37
+msgid "Claude Haiku 5.5 — fastest and cheapest"
+msgstr "Claude Haiku 5.5 — nejrychlejší a nejlevnější"
+
+#: wp-ai-editor/includes/settings.php:49
+msgid "Low — fastest, for simple edits"
+msgstr "Nízká — nejrychlejší, pro jednoduché úpravy"
+
+#: wp-ai-editor/includes/settings.php:50
+msgid "Medium — balanced (recommended)"
+msgstr "Střední — vyvážená (doporučeno)"
+
+#: wp-ai-editor/includes/settings.php:51
+msgid "High — more thorough, slower"
+msgstr "Vysoká — důkladnější, pomalejší"
+
+#: wp-ai-editor/includes/settings.php:52
+msgid "Extra high — most thorough, slowest and most expensive"
+msgstr "Velmi vysoká — nejdůkladnější, nejpomalejší a nejdražší"
+
+#: wp-ai-editor/includes/settings.php:137
+msgid "This does not look like an Anthropic API key (it must start with \"sk-ant-\"). The key was not changed."
+msgstr "Zadaný klíč nevypadá jako API klíč Anthropic (musí začínat „sk-ant-“). Klíč nebyl změněn."
+
+#: wp-ai-editor/includes/stream.php:176
+msgid "The Anthropic API stream ended before any answer arrived. Please try again."
+msgstr "Stream z Anthropic API skončil dřív, než přišla jakákoli odpověď. Zkus to prosím znovu."
+
+#: wp-ai-editor/includes/stream.php:179 wp-ai-editor/includes/stream.php:272
+msgid "The connection to the Anthropic API dropped in the middle of the answer. Please try again."
+msgstr "Spojení s Anthropic API se přerušilo uprostřed odpovědi. Zkus to prosím znovu."
+
+#: wp-ai-editor/includes/tools/content.php:23
+msgid "Loading pages and posts…"
+msgstr "Načítám stránky a příspěvky…"
+
+#. translators: %d: post ID
+#: wp-ai-editor/includes/tools/content.php:37
+#, php-format
+msgid "Reading #%d…"
+msgstr "Čtu #%d…"
+
+#. translators: %d: post ID
+#: wp-ai-editor/includes/tools/content.php:57
+#, php-format
+msgid "Saving post #%d…"
+msgstr "Ukládám příspěvek #%d…"
+
+#. translators: %s: page title
+#: wp-ai-editor/includes/tools/content.php:80
+#, php-format
+msgid "Creating page \"%s\"…"
+msgstr "Vytvářím stránku „%s“…"
+
+#. translators: %s: post title
+#: wp-ai-editor/includes/tools/content.php:82
+#, php-format
+msgid "Creating post \"%s\"…"
+msgstr "Vytvářím příspěvek „%s“…"
+
+#: wp-ai-editor/includes/tools/content.php:183 wp-ai-editor/includes/tools/content.php:270
+msgid "Status"
+msgstr "Stav"
+
+#: wp-ai-editor/includes/tools/content.php:186 wp-ai-editor/includes/tools/content.php:269
+msgid "Title"
+msgstr "Název"
+
+#: wp-ai-editor/includes/tools/content.php:189
+msgid "Excerpt"
+msgstr "Úryvek"
+
+#: wp-ai-editor/includes/tools/content.php:195
+msgid "The post is published; saving it with this status takes it off the site."
+msgstr "Příspěvek je publikovaný; uložením s tímto stavem zmizí z webu."
+
+#. translators: 1: post title, 2: post ID
+#: wp-ai-editor/includes/tools/content.php:238
+#, php-format
+msgid "Edited \"%1$s\" (#%2$d)"
+msgstr "Upraveno „%1$s“ (#%2$d)"
+
+#: wp-ai-editor/includes/tools/content.php:268
+msgid "Type"
+msgstr "Typ"
+
+#. translators: 1: post title, 2: post ID
+#: wp-ai-editor/includes/tools/content.php:321
+#, php-format
+msgid "Created \"%1$s\" (#%2$d)"
+msgstr "Vytvořeno „%1$s“ (#%2$d)"
+
+#: wp-ai-editor/includes/tools/design.php:17
+msgid "Checking site context…"
+msgstr "Zjišťuji kontext webu…"
+
+#: wp-ai-editor/includes/tools/design.php:25
+msgid "Reading global styles…"
+msgstr "Čtu globální styly…"
+
+#. translators: %s: theme.json section (settings or styles)
+#: wp-ai-editor/includes/tools/design.php:43
+#, php-format
+msgid "Updating global styles (%s)…"
+msgstr "Upravuji globální styly (%s)…"
+
+#: wp-ai-editor/includes/tools/design.php:52
+msgid "Loading templates…"
+msgstr "Načítám šablony…"
+
+#. translators: %s: template slug
+#: wp-ai-editor/includes/tools/design.php:68
+#, php-format
+msgid "Reading template \"%s\"…"
+msgstr "Čtu šablonu „%s“…"
+
+#. translators: %s: template slug
+#: wp-ai-editor/includes/tools/design.php:87
+#, php-format
+msgid "Saving template \"%s\"…"
+msgstr "Ukládám šablonu „%s“…"
+
+#: wp-ai-editor/includes/tools/design.php:96
+msgid "Reading Additional CSS…"
+msgstr "Čtu Doplňkový CSS…"
+
+#: wp-ai-editor/includes/tools/design.php:113
+msgid "Updating Additional CSS…"
+msgstr "Upravuji Doplňkový CSS…"
+
+#: wp-ai-editor/includes/tools/design.php:122
+msgid "Reading site identity…"
+msgstr "Čtu identitu webu…"
+
+#: wp-ai-editor/includes/tools/design.php:141
+msgid "Updating site identity…"
+msgstr "Upravuji identitu webu…"
+
+#: wp-ai-editor/includes/tools/design.php:150
+msgid "Loading menus…"
+msgstr "Načítám menu…"
+
+#. translators: %d: menu ID
+#: wp-ai-editor/includes/tools/design.php:171
+#, php-format
+msgid "Updating menu #%d…"
+msgstr "Upravuji menu #%d…"
+
+#. translators: %s: theme.json section
+#: wp-ai-editor/includes/tools/design.php:279
+#, php-format
+msgid "Global styles changed (%s)"
+msgstr "Globální styly změněny (%s)"
+
+#. translators: %s: template slug
+#: wp-ai-editor/includes/tools/design.php:406
+#, php-format
+msgid "Template \"%s\" changed"
+msgstr "Šablona „%s“ změněna"
+
+#: wp-ai-editor/includes/tools/design.php:431
+msgid "Appended to the end of Additional CSS:"
+msgstr "Přidáno na konec Doplňkového CSS:"
+
+#: wp-ai-editor/includes/tools/design.php:456
+msgid "Additional CSS appended"
+msgstr "Doplňkový CSS doplněn"
+
+#: wp-ai-editor/includes/tools/design.php:456
+msgid "Additional CSS replaced"
+msgstr "Doplňkový CSS přepsán"
+
+#: wp-ai-editor/includes/tools/design.php:496
+msgid "Site title"
+msgstr "Název webu"
+
+#: wp-ai-editor/includes/tools/design.php:499
+msgid "Tagline"
+msgstr "Podtitulek"
+
+#: wp-ai-editor/includes/tools/design.php:503 wp-ai-editor/includes/tools/design.php:505
+msgid "Logo"
+msgstr "Logo"
+
+#: wp-ai-editor/includes/tools/design.php:503 wp-ai-editor/includes/tools/design.php:508 wp-ai-editor/includes/tools/media.php:232
+msgid "(removed)"
+msgstr "(odebráno)"
+
+#: wp-ai-editor/includes/tools/design.php:508
+msgid "Header image"
+msgstr "Obrázek záhlaví"
+
+#: wp-ai-editor/includes/tools/design.php:581
+msgid "Site identity changed"
+msgstr "Identita webu změněna"
+
+#. translators: %s: menu name
+#: wp-ai-editor/includes/tools/design.php:616
+#, php-format
+msgid "New item in %s"
+msgstr "Nová položka v %s"
+
+#. translators: 1: menu item label, 2: menu name
+#: wp-ai-editor/includes/tools/design.php:684
+#, php-format
+msgid "Menu item \"%1$s\" added to %2$s"
+msgstr "Položka menu „%1$s“ přidána do %2$s"
+
+#. translators: 1: old label, 2: new label
+#: wp-ai-editor/includes/tools/design.php:715
+#, php-format
+msgid "Menu item \"%1$s\" renamed to \"%2$s\""
+msgstr "Položka menu „%1$s“ přejmenována na „%2$s“"
+
+#: wp-ai-editor/includes/tools/media.php:26
+msgid "Loading images…"
+msgstr "Načítám obrázky…"
+
+#. translators: %d: attachment ID
+#: wp-ai-editor/includes/tools/media.php:41
+#, php-format
+msgid "Looking at image #%d…"
+msgstr "Prohlížím obrázek #%d…"
+
+#. translators: %d: number of images
+#: wp-ai-editor/includes/tools/media.php:69
+#, php-format
+msgid "Setting alt text of %d image…"
+msgid_plural "Setting alt texts of %d images…"
+msgstr[0] "Nastavuji alt text %d obrázku…"
+msgstr[1] "Nastavuji alt texty %d obrázků…"
+msgstr[2] "Nastavuji alt texty %d obrázků…"
+
+#. translators: %d: post ID
+#: wp-ai-editor/includes/tools/media.php:90
+#, php-format
+msgid "Setting the featured image of #%d…"
+msgstr "Nastavuji náhledový obrázek #%d…"
+
+#. translators: %d: number of images
+#: wp-ai-editor/includes/tools/media.php:218
+#, php-format
+msgid "Alt text of %d image changed"
+msgid_plural "Alt texts of %d images changed"
+msgstr[0] "Alt text %d obrázku změněn"
+msgstr[1] "Alt texty %d obrázků změněny"
+msgstr[2] "Alt texty %d obrázků změněny"
+
+#. translators: %s: post title
+#: wp-ai-editor/includes/tools/media.php:257
+#, php-format
+msgid "Featured image of \"%s\" changed"
+msgstr "Náhledový obrázek „%s“ změněn"
+
+#. translators: %s: tool name
+#: wp-ai-editor/includes/tools/registry.php:125
+#, php-format
+msgid "Running %s…"
+msgstr "Spouštím %s…"
+
+#: wp-ai-editor/includes/tools/registry.php:223 wp-ai-editor/includes/tools/registry.php:235
+msgid "Current"
+msgstr "Současné"
+
+#: wp-ai-editor/includes/tools/registry.php:224 wp-ai-editor/includes/tools/registry.php:235
+msgid "New"
+msgstr "Nové"
+
+#: wp-ai-editor/includes/tools/registry.php:228
+msgid "No visible difference."
+msgstr "Žádný viditelný rozdíl."
+
+#. translators: %d: post ID
+#: wp-ai-editor/includes/tools/seo.php:48
+#, php-format
+msgid "Reading SEO of #%d…"
+msgstr "Čtu SEO #%d…"
+
+#. translators: %d: post ID
+#: wp-ai-editor/includes/tools/seo.php:67
+#, php-format
+msgid "Updating SEO of #%d…"
+msgstr "Upravuji SEO #%d…"
+
+#: wp-ai-editor/includes/tools/seo.php:105
+msgid "SEO title"
+msgstr "SEO titulek"
+
+#: wp-ai-editor/includes/tools/seo.php:108
+msgid "Meta description"
+msgstr "Meta popisek"
+
+#. translators: %s: post title
+#: wp-ai-editor/includes/tools/seo.php:145
+#, php-format
+msgid "SEO of \"%s\" changed"
+msgstr "SEO „%s“ změněno"
+
+#: wp-ai-editor/includes/tools/taxonomy-search.php:26
+msgid "Loading tags…"
+msgstr "Načítám štítky…"
+
+#: wp-ai-editor/includes/tools/taxonomy-search.php:26
+msgid "Loading categories…"
+msgstr "Načítám kategorie…"
+
+#. translators: %d: post ID
+#: wp-ai-editor/includes/tools/taxonomy-search.php:45
+#, php-format
+msgid "Setting categories/tags of #%d…"
+msgstr "Nastavuji kategorie/štítky #%d…"
+
+#. translators: %s: searched text
+#: wp-ai-editor/includes/tools/taxonomy-search.php:61
+#, php-format
+msgid "Searching for \"%s\"…"
+msgstr "Hledám „%s“…"
+
+#. translators: 1: searched text, 2: replacement
+#: wp-ai-editor/includes/tools/taxonomy-search.php:82
+#, php-format
+msgid "Replacing \"%1$s\" with \"%2$s\"…"
+msgstr "Nahrazuji „%1$s“ za „%2$s“…"
+
+#. translators: %s: post title
+#: wp-ai-editor/includes/tools/taxonomy-search.php:167
+#, php-format
+msgid "Categories of \"%s\" changed"
+msgstr "Kategorie „%s“ změněny"
+
+#: wp-ai-editor/includes/tools/taxonomy-search.php:167
+#, php-format
+msgid "Tags of \"%s\" changed"
+msgstr "Štítky „%s“ změněny"
+
+#: wp-ai-editor/includes/tools/taxonomy-search.php:291
+msgid "No post contains the text, nothing would change."
+msgstr "Žádný příspěvek tento text neobsahuje, nic by se nezměnilo."
+
+#. translators: %d: number of posts
+#: wp-ai-editor/includes/tools/taxonomy-search.php:296
+#, php-format
+msgid "%d post will change:"
+msgid_plural "%d posts will change:"
+msgstr[0] "Změní se %d příspěvek:"
+msgstr[1] "Změní se %d příspěvky:"
+msgstr[2] "Změní se %d příspěvků:"
+
+#. translators: 1: searched text, 2: replacement, 3: number of posts
+#: wp-ai-editor/includes/tools/taxonomy-search.php:351
+#, php-format
+msgid "\"%1$s\" → \"%2$s\" in %3$d posts"
+msgstr "„%1$s“ → „%2$s“ ve %3$d příspěvcích"
+
+#: wp-ai-editor/includes/tools/woocommerce.php:26
+msgid "Loading products…"
+msgstr "Načítám produkty…"
+
+#. translators: %d: product ID
+#: wp-ai-editor/includes/tools/woocommerce.php:42
+#, php-format
+msgid "Reading product #%d…"
+msgstr "Čtu produkt #%d…"
+
+#. translators: %d: product ID
+#: wp-ai-editor/includes/tools/woocommerce.php:68
+#, php-format
+msgid "Updating product #%d…"
+msgstr "Upravuji produkt #%d…"
+
+#. translators: %s: product name
+#: wp-ai-editor/includes/tools/woocommerce.php:260
+#, php-format
+msgid "Product \"%s\" changed"
+msgstr "Produkt „%s“ změněn"

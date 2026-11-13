@@ -637,5 +637,26 @@ test( 'optional tools: SEO and WooCommerce only when the plugin is active', func
 	check( get_post_meta( 7, '_yoast_wpseo_title' ) === '' && get_post_meta( 7, '_yoast_wpseo_metadesc' ) === '', 'undo removes the SEO meta' );
 } );
 
+test( 'editors: chat only when allowed, admin-only tools hidden', function () {
+	$GLOBALS['wp_test']['denied_caps'] = [ 'manage_options', 'edit_theme_options', 'edit_products' ];
+	check( ! wpaie_user_can_chat(), 'editor cannot chat by default' );
+	update_option( WPAIE_OPTION_KEY, [ 'allow_editors' => true ] );
+	check( wpaie_user_can_chat() && wpaie_chat_capability() === 'edit_others_posts', 'editor can chat when allowed' );
+	$names = wpaie_available_tool_names();
+	check( in_array( 'replace_in_content', $names, true ) && in_array( 'update_media_alt', $names, true ), 'content and media tools available' );
+	foreach ( [ 'update_custom_css', 'update_theme_json', 'update_template_content', 'update_menu', 'update_site_identity' ] as $tool ) {
+		check( ! in_array( $tool, $names, true ), "$tool hidden from editors" );
+	}
+} );
+
+test( 'translations: .pot covers the code, Czech .mo is complete', function () {
+	$pot = (string) file_get_contents( dirname( __DIR__ ) . '/wp-ai-editor/languages/wp-ai-editor.pot' );
+	$po  = (string) file_get_contents( dirname( __DIR__ ) . '/wp-ai-editor/languages/wp-ai-editor-cs_CZ.po' );
+	check( str_contains( $pot, 'msgid "The assistant wants to make this change:"' ), '.pot contains UI strings' );
+	check( substr_count( $pot, "\nmsgid \"" ) === substr_count( $po, "\nmsgid \"" ), '.po has every .pot entry' );
+	check( ! preg_match( '/^msgstr ""\n\n/m', $po . "\n" ), 'no empty translation' );
+	check( is_file( dirname( __DIR__ ) . '/wp-ai-editor/languages/wp-ai-editor-cs_CZ.mo' ), '.mo compiled' );
+} );
+
 echo "\n" . ( $failures ? "$failures of $count checks FAILED\n" : "All $count checks passed\n" );
 exit( $failures ? 1 : 0 );

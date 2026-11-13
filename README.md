@@ -47,7 +47,7 @@ When a conversation starts, the assistant checks whether the site uses a block (
 - WordPress 6.0+
 - PHP 8.0+ (with the `curl`/`openssl` and `mbstring` extensions)
 - An Anthropic API key ([Claude Console → API Keys](https://platform.claude.com/settings/keys)) with credit
-- A user with the administrator role (`manage_options` capability)
+- A user with the administrator role (`manage_options` capability); editors can be allowed in Settings
 
 ## Installation
 
@@ -74,6 +74,7 @@ The constant takes precedence over a key saved in Settings.
 | Ask before changes | Live changes | Live changes only / every change including drafts / never. |
 | Monthly budget (USD) | 0 (no limit) | The chat stops when the estimated spending this month reaches it. |
 | Live answers | On | Streams the answer as it is written. Needs the PHP cURL extension. |
+| Editors | Off | Lets editors use the chat with the tools their role allows (content, categories, media, SEO). Design tools, History and Settings stay admin-only. |
 
 ### Claude Fable 5.2
 
@@ -130,14 +131,24 @@ Detailed log: enable `WP_DEBUG` and `WP_DEBUG_LOG` in `wp-config.php`. The plugi
 
 ## Security
 
-- The chat and all AJAX actions are available to administrators only and are protected by a nonce.
+- The chat and all AJAX actions are protected by a nonce and available to administrators (and to editors, if allowed). Every tool checks the user's capabilities again when it runs.
 - Content edits are saved as **drafts**. Changes to styles, templates, menus, identity and CSS are live immediately, but can be reverted through WordPress revisions.
 - The API key is never printed into the HTML (the form shows only a masked version).
 - Messages and site content sent to the model are processed by Anthropic. See [Anthropic's policies](https://www.anthropic.com/legal).
 
 ## Translation
 
-All user-facing strings use the `wp-ai-editor` text domain, so the admin UI can be translated (`.po`/`.mo` files in `wp-ai-editor/languages/`). The assistant itself replies in whatever language you write in.
+The UI is in English with a complete **Czech translation** (used automatically when the site or user language is Czech). All strings use the `wp-ai-editor` text domain; the files live in `wp-ai-editor/languages/`. The assistant itself replies in whatever language you write in.
+
+To update or add a translation (no WP-CLI or gettext needed):
+
+```bash
+php bin/make-pot.php     # extract strings → languages/wp-ai-editor.pot
+# edit / create languages/wp-ai-editor-<locale>.po (e.g. in Poedit, "Update from POT")
+php bin/po2mo.php        # compile every .po → .mo
+```
+
+CI fails when the `.pot` or a `.mo` is out of date.
 
 ## Uninstall
 
@@ -165,7 +176,9 @@ wp-ai-editor/              # the plugin itself (contents of the ZIP)
 │   ├── ajax.php           # AJAX endpoints
 │   └── admin.php          # admin screens
 └── assets/                # admin.css, admin.js, editor.js (block editor sidebar)
-tests/                     # dependency-free tests (WordPress stubs)
+wp-ai-editor/languages/    # .pot and the Czech translation
+bin/                       # make-pot.php, po2mo.php (translation tools)
+tests/                     # dependency-free tests (WordPress stubs, fake API)
 ```
 
 Tests and syntax check (the streaming test starts a fake API with `php -S` on port 8765):
@@ -184,7 +197,7 @@ zip -r wp-ai-editor.zip wp-ai-editor          # Linux/macOS
 Compress-Archive -Path wp-ai-editor -DestinationPath wp-ai-editor.zip -Force   # Windows
 ```
 
-GitHub Actions runs the tests on PHP 8.0–8.4 and attaches the ZIP to every run as an artifact. Pushing a `v*` tag (e.g. `v2.0.0`) creates a Release with the ZIP.
+GitHub Actions runs the tests on PHP 8.0–8.4, checks the translations and attaches the ZIP to every run as an artifact. Pushing a `v*` tag (e.g. `v3.0.0`) creates a Release with the ZIP.
 
 ## Changelog
 

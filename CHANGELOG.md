@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 3.0.0
 
 ### Approvals and undo
 - Changes visible on the site immediately wait for the user's approval in the chat, with a preview (content/template diff, CSS, JSON, old → new values). Configurable: live changes only (default), every change, or never.
@@ -20,6 +20,10 @@
 - SEO titles and meta descriptions for Yoast SEO and Rank Math (only when active).
 - WooCommerce products and variations: names, descriptions, prices, sale prices, stock, status (only when active).
 - The system prompt lists only what is available on the site.
+
+### Roles and translation
+- Optional access for editors (Settings → Editors) with the tools their role allows; design tools, History and Settings stay admin-only; editors can undo their own changes.
+- Complete Czech translation; dependency-free `bin/make-pot.php` and `bin/po2mo.php`; CI checks that translations are up to date.
 
 ### Costs and streaming
 - Estimated cost per answer and per conversation, monthly usage table in Settings, and a monthly budget that stops the chat when it is used up.

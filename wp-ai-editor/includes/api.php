@@ -260,7 +260,7 @@ function wpaie_api_error( int $status, $data, string $request_id = '' ): WP_Erro
 			$status === 402 || $type === 'billing_error'        => __( 'Billing problem on your Anthropic account. Check your payment details in the Claude Console.', 'wp-ai-editor' ),
 			$status === 403 || $type === 'permission_error'     => __( 'The API key is not allowed to perform this action or to use the selected model.', 'wp-ai-editor' ),
 			$status === 404 || $type === 'not_found_error'      => __( 'The selected model was not found or your account has no access to it. Choose another model in Settings.', 'wp-ai-editor' ),
-			$status === 413 || $type === 'request_too_large'    => __( 'The conversation is too large for the API. Start a new chat (trash icon, top right).', 'wp-ai-editor' ),
+			$status === 413 || $type === 'request_too_large'    => __( 'The conversation is too large for the API. Start a new chat (＋ at the top right).', 'wp-ai-editor' ),
 			$status === 429 || $type === 'rate_limit_error'     => __( 'Anthropic API rate limit exceeded. Wait a moment and try again.', 'wp-ai-editor' ),
 			$status === 529 || $type === 'overloaded_error'     => __( 'The Anthropic API is currently overloaded. Please try again in a moment.', 'wp-ai-editor' ),
 			$status >= 500                                       => __( 'Temporary error on the Anthropic API side. Please try again.', 'wp-ai-editor' ),
