@@ -6,10 +6,13 @@
  * Version:           2.0.0
  * Requires at least: 6.0
  * Requires PHP:      8.0
- * Author:            WP AI Editor
+ * Author:            Jakub Straka
+ * Author URI:        https://github.com/strakajakub
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  * Text Domain:       wp-ai-editor
+ *
+ * Copyright (C) 2026 Jakub Straka
  *
  * This program is free software; you can redistribute it and/or modify it under the terms of
  * the GNU General Public License as published by the Free Software Foundation; either version 2

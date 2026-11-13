@@ -139,4 +139,4 @@ Viz [CHANGELOG.md](CHANGELOG.md).
 
 ## Licence
 
-[GPL-2.0-or-later](LICENSE), stejně jako WordPress. Plugin můžeš volně používat, upravovat i šířit. Upravené verze, které šíříš dál, musí zůstat pod stejnou licencí.
+Copyright © 2026 Jakub Straka. Licence [GPL-2.0-or-later](LICENSE), stejně jako WordPress. Plugin můžeš volně používat, upravovat i šířit. Upravené verze, které šíříš dál, musí zůstat pod stejnou licencí.
