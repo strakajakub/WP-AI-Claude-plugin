@@ -136,3 +136,7 @@ GitHub Actions spouští testy na PHP 8.0–8.4, ke každému běhu přikládá 
 ## Changelog
 
 Viz [CHANGELOG.md](CHANGELOG.md).
+
+## Licence
+
+[GPL-2.0-or-later](LICENSE), stejně jako WordPress. Plugin můžeš volně používat, upravovat i šířit. Upravené verze, které šíříš dál, musí zůstat pod stejnou licencí.

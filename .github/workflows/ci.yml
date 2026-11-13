@@ -36,7 +36,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build plugin ZIP
-        run: zip -r wp-ai-editor.zip wp-ai-editor
+        run: |
+          cp LICENSE wp-ai-editor/LICENSE
+          zip -r wp-ai-editor.zip wp-ai-editor
       - uses: actions/upload-artifact@v4
         with:
           name: wp-ai-editor

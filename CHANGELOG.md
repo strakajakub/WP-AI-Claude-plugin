@@ -35,6 +35,7 @@
 ### Kód
 - Rozdělení do modulů v `includes/`, CSS a JS v `assets/` (správně načítané přes `wp_enqueue_*`).
 - Odpovědi se formátují na serveru (jedna implementace mini-markdownu).
+- Licence GPL-2.0-or-later (`LICENSE`, hlavička pluginu, součást ZIPu).
 - Testy bez závislostí (`php tests/run.php`) a GitHub Actions (PHP 8.0–8.4, sestavení ZIPu, release).
 
 ## 1.3.0
