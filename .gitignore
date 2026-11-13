@@ -1,0 +1,8 @@
+# Built plugin archives
+*.zip
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
