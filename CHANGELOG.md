@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.1.1
+
+Fixes from a review of the Customizer tools (checked against WordPress core and Astra 4.14.3 source):
+- **Astra setting groups:** settings inside Astra's groups (e.g. body/heading typography, many colors) exist only on demand and have no server-side control, so they were missing. They are now created with core's `add_dynamic_settings()` and listed with their label, group and choices from Astra's configurations (filter `wpaie_customizer_extra_settings` lets other themes describe such settings too).
+- **Saving and undo** go through core's `save_changeset_post()` (status publish) – the same path as the Customizer's Publish button: all values are validated together (also a `WP_Error` from a sanitize callback), nothing is saved if one is invalid, `customize_save` fires after the values are set and `customize_save_after` at the end (Astra rebuilds its CSS), and a changeset revision is kept.
+- **Undo** restores the "not set" state of settings that had no stored value (removes the key, so theme defaults apply again) instead of writing the default; it checks all previous values before changing anything and reports a failure instead of claiming success.
+- The Customizer is loaded without the widgets and menus components (faster on sites with large menus); a failed load restores the previous `$wp_customize` global; layout-only controls (headings, dividers, group toggles) are not listed as settings.
+
 ## 3.1.0
 
 - **Theme Customizer settings** (e.g. Astra's layouts, container width, typography, colors, buttons, header/footer, blog): new tools `list_customizer_settings`, `get_customizer_setting` and `update_customizer_settings`. The Customizer is loaded in the background like its own screen, so settings come with the theme's labels, choices, validation and sanitization; changes are validated before anything is saved, saved through `customize_save` / `customize_save_after` (themes rebuild their CSS cache), need approval and can be undone. Works with any theme; administrators only. Site identity, Additional CSS, menus and widgets stay with their own tools.

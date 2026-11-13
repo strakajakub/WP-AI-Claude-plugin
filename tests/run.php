@@ -827,51 +827,74 @@ test( 'review 2 fix: lock token and cleanup of images of an unsaved step', funct
 	check( count( $requests ) === 1 && str_ends_with( $requests[0]['url'], '/files/file_new' ) && $requests[0]['args']['method'] === 'DELETE', 'only the newly uploaded file is deleted' );
 } );
 
-// ─── A fake Customizer (what Astra registers, plus core settings that other tools own) ───
+// ─── A fake Customizer that follows core's behaviour (verified against wordpress-develop trunk) ───
+// Values live in the "astra-settings" option like Astra's; settings inside Astra's groups exist only
+// on demand (add_dynamic_settings); save_changeset_post() is transactional, fires customize_save
+// after the values are set and customize_save_after at the end; a manager publishes only once.
+
+if ( ! defined( 'ASTRA_THEME_SETTINGS' ) ) {
+	define( 'ASTRA_THEME_SETTINGS', 'astra-settings' );
+}
 
 class WPAIE_Fake_Setting {
 	public $id;
 	public $type       = 'option';
 	public $default    = '';
 	public $capability = 'edit_theme_options';
-	public $manager;
 	public $validator;
-	public function __construct( $manager, $id, array $args = [] ) {
-		$this->manager = $manager;
-		$this->id      = $id;
+	public $sanitizer;
+	public function __construct( $id, array $args = [] ) {
+		$this->id = $id;
 		foreach ( $args as $k => $v ) {
 			$this->$k = $v;
 		}
 	}
-	public function value() { return $GLOBALS['wp_test']['customizer'][ $this->id ] ?? $this->default; }
-	public function validate( $value ) { return $this->validator ? ( $this->validator )( $value ) : true; }
-	public function sanitize( $value ) { return $value; }
-	public function check_capabilities() { return current_user_can( $this->capability ); }
-	public function save() {
-		$value = $this->manager->post_values[ $this->id ] ?? null;
-		if ( $value === null ) {
-			return false;
+	public function id_data() {
+		$keys = preg_split( '/\[/', str_replace( ']', '', $this->id ) );
+		return [ 'base' => array_shift( $keys ), 'keys' => $keys ];
+	}
+	public function value() {
+		$d    = $this->id_data();
+		$root = get_option( $d['base'], null );
+		if ( ! $d['keys'] ) {
+			return $root ?? $this->default;
 		}
-		$GLOBALS['wp_test']['customizer'][ $this->id ] = $value;
+		return is_array( $root ) && array_key_exists( $d['keys'][0], $root ) ? $root[ $d['keys'][0] ] : $this->default;
+	}
+	public function validate( $value ) { return $this->validator ? ( $this->validator )( $value ) : true; }
+	public function sanitize( $value ) { return $this->sanitizer ? ( $this->sanitizer )( $value ) : $value; }
+	public function check_capabilities() { return current_user_can( $this->capability ); }
+	public function save_value( $value ) {
+		$d = $this->id_data();
+		if ( ! $d['keys'] ) {
+			update_option( $d['base'], $value );
+			return;
+		}
+		$root                  = (array) get_option( $d['base'], [] );
+		$root[ $d['keys'][0] ] = $value;
+		update_option( $d['base'], $root );
 	}
 }
 
 class WP_Customize_Manager {
-	public $post_values = [];
-	private $settings   = [];
-	private $controls   = [];
+	public $settings  = [];
+	public $controls  = [];
+	public $dynamic   = []; // what the theme's customize_dynamic_setting_args filter would return
+	public $published = false;
 	public function __construct( $args = [] ) {
-		$GLOBALS['wp_test_customizer_args'] = $args;
+		$GLOBALS['wp_test']['customizer_args'] = $args;
 		$layouts = [ 'blog-layout-1' => 'Classic', 'blog-layout-4' => 'Grid', 'blog-layout-5' => 'List' ];
 		$this->add( 'astra-settings[blog-layout]', 'Blog Layout', 'section-blog', 'ast-radio-image', $layouts, 'blog-layout-1', fn( $v ) => isset( $layouts[ $v ] ) ? true : new WP_Error( 'invalid', 'Invalid layout.' ) );
 		$this->add( 'astra-settings[site-content-width]', 'Container Width', 'section-container-layout', 'ast-slider', [], 1200, fn( $v ) => is_numeric( $v ) && $v >= 768 ? true : new WP_Error( 'invalid', 'Must be at least 768.' ) );
-		$this->add( 'astra-settings[font-size-body]', 'Body Font Size', 'section-body-typo', 'ast-responsive-slider', [], [ 'desktop' => 16, 'tablet' => '', 'mobile' => '' ] );
+		$this->add( 'astra-settings[ast-body-font-settings]', 'Body Font', 'section-body-typo', 'ast-settings-group', [], '' );
 		$this->add( 'blogname', 'Site Title', 'title_tagline', 'text', [], 'Web' );
 		$this->add( 'custom_css[astra]', 'CSS', 'custom_css', 'code_editor', [], '' );
-		$this->add( 'nav_menu_locations[primary]', 'Primary', 'menu_locations', 'select', [], 0 );
+		// Settings inside Astra's "Body Font" group: no control, created on demand.
+		$this->dynamic['astra-settings[font-size-body]']   = [ 'default' => [ 'desktop' => 16, 'tablet' => '', 'mobile' => '' ] ];
+		$this->dynamic['astra-settings[body-font-family]'] = [ 'default' => 'inherit', 'sanitizer' => fn( $v ) => is_string( $v ) ? $v : new WP_Error( 'bad_font', 'Font must be a string.' ) ];
 	}
 	private function add( $id, $label, $section, $type, $choices, $default, $validator = null ) {
-		$this->settings[ $id ] = new WPAIE_Fake_Setting( $this, $id, [ 'default' => $default, 'validator' => $validator ] );
+		$this->settings[ $id ] = new WPAIE_Fake_Setting( $id, [ 'default' => $default, 'validator' => $validator ] );
 		$this->controls[ $id ] = (object) [
 			'settings'    => [ 'default' => $this->settings[ $id ] ],
 			'setting'     => $this->settings[ $id ],
@@ -883,7 +906,26 @@ class WP_Customize_Manager {
 			'section'     => $section,
 		];
 	}
-	public function wp_loaded() { $GLOBALS['wp_test']['customize_register'] = ( $GLOBALS['wp_test']['customize_register'] ?? 0 ) + 1; }
+	public function wp_loaded() {
+		$GLOBALS['wp_test']['customize_register'] = ( $GLOBALS['wp_test']['customize_register'] ?? 0 ) + 1;
+		// What Astra does during customize_register: build its configurations through its filter.
+		apply_filters(
+			'astra_customizer_configurations',
+			[
+				[ 'name' => 'astra-settings[ast-body-font-settings]', 'control' => 'ast-settings-group', 'title' => 'Body Font', 'section' => 'section-body-typo' ],
+				[ 'name' => 'font-size-body', 'parent' => 'astra-settings[ast-body-font-settings]', 'control' => 'ast-responsive-slider', 'title' => 'Font Size', 'section' => 'section-body-typo' ],
+				[ 'name' => 'body-font-family', 'parent' => 'astra-settings[ast-body-font-settings]', 'control' => 'ast-font', 'title' => 'Font Family', 'section' => 'section-body-typo', 'choices' => [ 'inherit' => 'Default', 'Roboto' => 'Roboto' ] ],
+				[ 'name' => 'body-divider', 'parent' => 'astra-settings[ast-body-font-settings]', 'control' => 'ast-divider', 'section' => 'section-body-typo' ],
+			]
+		);
+	}
+	public function add_dynamic_settings( $ids ) {
+		foreach ( $ids as $id ) {
+			if ( ! isset( $this->settings[ $id ] ) && isset( $this->dynamic[ $id ] ) ) {
+				$this->settings[ $id ] = new WPAIE_Fake_Setting( $id, $this->dynamic[ $id ] );
+			}
+		}
+	}
 	public function settings() { return $this->settings; }
 	public function controls() { return $this->controls; }
 	public function sections() {
@@ -900,48 +942,107 @@ class WP_Customize_Manager {
 		];
 	}
 	public function get_setting( $id ) { return $this->settings[ $id ] ?? null; }
-	public function set_post_value( $id, $value ) { $this->post_values[ $id ] = $value; }
+	public function validate_setting_values( $values, $options = [] ) {
+		$out = [];
+		foreach ( $values as $id => $value ) {
+			$setting = $this->get_setting( $id );
+			if ( ! $setting ) {
+				$out[ $id ] = new WP_Error( 'unrecognized', 'Setting does not exist or is unrecognized.' );
+				continue;
+			}
+			$validity = $setting->validate( $value );
+			if ( ! is_wp_error( $validity ) ) {
+				$sanitized = $setting->sanitize( $value );
+				$validity  = is_wp_error( $sanitized ) ? $sanitized : ( $sanitized === null ? new WP_Error( 'invalid_value', 'Invalid value.' ) : true );
+			}
+			$out[ $id ] = $validity;
+		}
+		return $out;
+	}
+	public function save_changeset_post( $args ) {
+		if ( $this->published ) {
+			return new WP_Error( 'changeset_already_published', 'The previous set of changes has already been published.' );
+		}
+		$values = [];
+		foreach ( $args['data'] as $id => $params ) {
+			$values[ $id ] = $params['value'];
+		}
+		$this->add_dynamic_settings( array_keys( $values ) );
+		$validities = $this->validate_setting_values( $values );
+		if ( array_filter( $validities, 'is_wp_error' ) ) {
+			return new WP_Error( 'transaction_fail', '', [ 'setting_validities' => $validities ] );
+		}
+		$this->published                          = true;
+		$GLOBALS['wp_test']['customizer_publish'] = ( $GLOBALS['wp_test']['customizer_publish'] ?? 0 ) + 1;
+		do_action( 'customize_save', $this );
+		foreach ( $values as $id => $value ) {
+			$this->settings[ $id ]->save_value( $value );
+		}
+		do_action( 'customize_save_after', $this );
+		return [ 'setting_validities' => $validities ];
+	}
 }
 
-test( 'customizer: lists theme settings with section, label, choices; other tools\' settings excluded', function () {
+function get_theme_mods() { return []; }
+
+test( 'customizer: lists theme settings incl. Astra group settings; layout controls and other tools\' settings excluded', function () {
+	WPAIE_Customizer_State::$manager = null;
 	$out = wpaie_tool_list_customizer_settings( [] );
 	check( str_contains( $out, 'astra-settings[blog-layout] | Blog › Blog / Archive (section-blog) | "Blog Layout"' ), 'setting with panel, section and label' );
-	check( str_contains( $out, 'choices:blog-layout-1=Classic, blog-layout-4=Grid' ) && str_contains( $out, "value:'blog-layout-1'" ), 'choices and current value' );
-	check( ! str_contains( $out, 'blogname' ) && ! str_contains( $out, 'custom_css' ) && ! str_contains( $out, 'nav_menu_locations' ), 'identity, CSS and menus are left to their own tools' );
-	check( ( $GLOBALS['wp_test_customizer_args']['settings_previewed'] ?? null ) === false, 'loaded without previewing' );
+	check( str_contains( $out, 'choices:blog-layout-1=Classic, blog-layout-4=Grid' ) && str_contains( $out, "value:'blog-layout-1'" ), 'choices and current (default) value' );
+	check( str_contains( $out, 'astra-settings[font-size-body] | Global › Body (section-body-typo) › Body Font | "Font Size" | type:ast-responsive-slider' ), 'setting inside an Astra group listed (created on demand)' );
+	check( str_contains( $out, 'choices:inherit=Default, Roboto' ), 'group setting choices from Astra\'s configuration' );
+	check( ! str_contains( $out, 'ast-body-font-settings]' ) && ! str_contains( $out, 'body-divider' ), 'group toggle and divider are not settings' );
+	check( ! str_contains( $out, 'blogname' ) && ! str_contains( $out, 'custom_css' ), 'identity and CSS left to their own tools' );
+	check( ( $GLOBALS['wp_test']['customizer_args']['settings_previewed'] ?? null ) === false, 'loaded without previewing' );
 
-	$blog = wpaie_tool_list_customizer_settings( [ 'search' => 'BLOG' ] );
-	check( str_contains( $blog, '1 settings match' ) && str_contains( $blog, 'blog-layout' ), 'search (case-insensitive) by label/section' );
-	check( str_contains( wpaie_tool_list_customizer_settings( [ 'search' => 'nonsense' ] ), 'No Customizer setting matches' ), 'helpful empty result' );
-
+	check( str_contains( wpaie_tool_list_customizer_settings( [ 'search' => 'body font' ] ), '2 settings match' ), 'search matches the group name' );
 	$one = wpaie_tool_get_customizer_setting( [ 'id' => 'astra-settings[font-size-body]' ] );
-	check( str_contains( $one, '"desktop": 16' ) && str_contains( $one, 'ast-responsive-slider' ), 'full structured value and control type' );
+	check( str_contains( $one, '"desktop": 16' ) && str_contains( $one, 'not set yet' ), 'structured value; reports that the default applies' );
 	check( is_wp_error( wpaie_tool_get_customizer_setting( [ 'id' => 'blogname' ] ) ), 'excluded setting refused' );
+	check( is_wp_error( wpaie_tool_get_customizer_setting( [ 'id' => 'astra-settings[nope]' ] ) ), 'unknown setting refused' );
 } );
 
-test( 'customizer: update validates everything first, saves with the save hooks, undo restores', function () {
-	$GLOBALS['wp_test']['actions'] = [];
+test( 'customizer: all-or-nothing publish through the changeset API (sanitize WP_Error too)', function () {
+	WPAIE_Customizer_State::$manager = null;
+	$GLOBALS['wp_test']['actions']   = [];
+
 	$bad = wpaie_run_tool( 'update_customizer_settings', [ 'changes' => [
 		[ 'id' => 'astra-settings[blog-layout]', 'value' => 'blog-layout-4' ],
-		[ 'id' => 'astra-settings[site-content-width]', 'value' => 300 ],
+		[ 'id' => 'astra-settings[body-font-family]', 'value' => [ 'not', 'a', 'string' ] ],
 	] ] );
-	check( is_wp_error( $bad ) && str_contains( $bad->get_error_message(), 'Must be at least 768' ), 'theme validation message returned to the model' );
-	check( empty( $GLOBALS['wp_test']['customizer'] ), 'nothing saved when one value is invalid' );
-
-	check( str_contains( wpaie_tool_preview( 'update_customizer_settings', [ 'changes' => [ [ 'id' => 'astra-settings[blog-layout]', 'value' => 'blog-layout-4' ] ] ] ), 'Blog / Archive › Blog Layout' ), 'preview with readable label' );
-	check( wpaie_tool_needs_approval( 'update_customizer_settings', [ 'changes' => [] ], 'live' ), 'live change, needs approval' );
+	check( is_wp_error( $bad ) && str_contains( $bad->get_error_message(), 'Font must be a string' ), 'sanitize WP_Error rejects the whole change' );
+	check( get_option( 'astra-settings', null ) === null && ! in_array( 'customize_save', $GLOBALS['wp_test']['actions'], true ), 'nothing saved, no save hooks fired' );
 
 	WPAIE_Run_Context::$changes = [];
 	$out = wpaie_run_tool( 'update_customizer_settings', [ 'changes' => [
 		[ 'id' => 'astra-settings[blog-layout]', 'value' => 'blog-layout-4' ],
 		[ 'id' => 'astra-settings[font-size-body]', 'value' => [ 'desktop' => 18, 'tablet' => 16, 'mobile' => 15 ] ],
 	] ] );
-	check( str_starts_with( (string) $out, 'Saved: astra-settings[blog-layout], astra-settings[font-size-body]' ), 'saved' );
-	check( $GLOBALS['wp_test']['customizer']['astra-settings[font-size-body]']['desktop'] === 18, 'structured value saved' );
-	check( in_array( 'customize_save', $GLOBALS['wp_test']['actions'], true ) && in_array( 'customize_save_after', $GLOBALS['wp_test']['actions'], true ), 'customize_save hooks fired (theme cache rebuild)' );
+	check( str_starts_with( (string) $out, 'Saved and published' ), 'saved' );
+	check( get_option( 'astra-settings' )['font-size-body']['desktop'] === 18, 'group setting saved' );
+	check( $GLOBALS['wp_test']['actions'] === [ 'customize_save', 'customize_save_after' ], 'save hooks fired once, in core\'s order' );
 
+	// Undo in the same request needs a fresh manager (a manager publishes once) – and restores the
+	// "not set" state instead of writing the defaults.
 	check( wpaie_undo_change( WPAIE_Run_Context::$changes[0]['id'] ) === true, 'undo ok' );
-	check( $GLOBALS['wp_test']['customizer']['astra-settings[blog-layout]'] === 'blog-layout-1' && $GLOBALS['wp_test']['customizer']['astra-settings[font-size-body]']['desktop'] === 16, 'previous values restored' );
+	check( get_option( 'astra-settings' ) === [], 'previously unset keys removed again (defaults apply), not saved as values' );
+	check( ( $GLOBALS['wp_test']['customizer_publish'] ?? 0 ) === 2, 'undo published through the changeset API too (theme CSS rebuild)' );
+} );
+
+test( 'customizer: undo restores stored values and refuses values the theme no longer accepts', function () {
+	WPAIE_Customizer_State::$manager = null;
+	update_option( 'astra-settings', [ 'site-content-width' => 1100 ] );
+	WPAIE_Run_Context::$changes = [];
+	wpaie_run_tool( 'update_customizer_settings', [ 'changes' => [ [ 'id' => 'astra-settings[site-content-width]', 'value' => 1400 ] ] ] );
+	check( get_option( 'astra-settings' )['site-content-width'] === 1400, 'changed' );
+	check( wpaie_undo_change( WPAIE_Run_Context::$changes[0]['id'] ) === true && get_option( 'astra-settings' )['site-content-width'] === 1100, 'stored previous value restored' );
+
+	// A recorded value that is no longer valid: undo fails without touching anything.
+	WPAIE_Customizer_State::$manager = null;
+	$res = wpaie_customizer_restore( [ 'astra-settings[site-content-width]' => 300 ], [ 'astra-settings[blog-layout]' ] );
+	check( is_wp_error( $res ) && str_contains( $res->get_error_message(), 'no longer accepted' ), 'invalid previous value refused' );
+	check( get_option( 'astra-settings' )['site-content-width'] === 1100, 'nothing changed by the refused undo' );
 } );
 
 test( 'customizer: only for administrators with the customize capability', function () {

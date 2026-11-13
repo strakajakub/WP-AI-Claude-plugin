@@ -15,7 +15,8 @@
  *   menu_item    { menu_id, item_id, title }
  *   wc_product   { product_id, props: { prop: value } }
  *   theme_json   { post_id, content }               – user Global Styles post content
- *   customizer   { values: { setting_id: value } }  – Customizer settings (saved through the Customizer)
+ *   customizer   { values: { setting_id: value }, unset: [ setting_id ] } – Customizer settings (published
+ *                like the Customizer does); unset = was not stored before, remove so the default applies
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -229,7 +230,7 @@ function wpaie_undo_op_targets( array $op ): array {
 		case 'wc_product':
 			return [ 'wc:' . (int) ( $op['product_id'] ?? 0 ) ];
 		case 'customizer':
-			return array_map( fn( $id ) => "customizer:$id", array_keys( (array) ( $op['values'] ?? [] ) ) );
+			return array_map( fn( $id ) => "customizer:$id", array_merge( array_keys( (array) ( $op['values'] ?? [] ) ), (array) ( $op['unset'] ?? [] ) ) );
 	}
 	return [];
 }
@@ -345,7 +346,7 @@ function wpaie_apply_undo_op( array $op ) {
 			return is_wp_error( $res ) ? $res : true;
 
 		case 'customizer':
-			return wpaie_customizer_restore( (array) $op['values'] );
+			return wpaie_customizer_restore( (array) ( $op['values'] ?? [] ), array_map( 'strval', (array) ( $op['unset'] ?? [] ) ) );
 
 		case 'wc_product':
 			return function_exists( 'wpaie_wc_apply_props' )

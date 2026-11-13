@@ -536,30 +536,30 @@ msgstr ""
 msgid "The Files API did not return a file ID."
 msgstr ""
 
-#: wp-ai-editor/includes/changes.php:149
+#: wp-ai-editor/includes/changes.php:150
 msgid "This change was not found in the history."
 msgstr ""
 
-#: wp-ai-editor/includes/changes.php:152
+#: wp-ai-editor/includes/changes.php:153
 msgid "You are not allowed to undo this change."
 msgstr ""
 
-#: wp-ai-editor/includes/changes.php:155
+#: wp-ai-editor/includes/changes.php:156
 msgid "This change has already been undone."
 msgstr ""
 
-#: wp-ai-editor/includes/changes.php:160
+#: wp-ai-editor/includes/changes.php:161
 msgid "The undo data for this change is damaged."
 msgstr ""
 
 #. translators: %s: list of change descriptions
-#: wp-ai-editor/includes/changes.php:172
+#: wp-ai-editor/includes/changes.php:173
 #, php-format
 msgid "A newer change touched the same thing. Undo it first: %s"
 msgstr ""
 
 #. translators: %s: error message
-#: wp-ai-editor/includes/changes.php:185
+#: wp-ai-editor/includes/changes.php:186
 #, php-format
 msgid "Undo failed: %s"
 msgstr ""
@@ -824,23 +824,23 @@ msgid "Created \"%1$s\" (#%2$d)"
 msgstr ""
 
 #. translators: %s: searched text
-#: wp-ai-editor/includes/tools/customizer.php:55
+#: wp-ai-editor/includes/tools/customizer.php:68
 #, php-format
 msgid "Searching Customizer settings for \"%s\"…"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/customizer.php:56
+#: wp-ai-editor/includes/tools/customizer.php:69
 msgid "Loading Customizer settings…"
 msgstr ""
 
 #. translators: %s: setting ID
-#: wp-ai-editor/includes/tools/customizer.php:71
+#: wp-ai-editor/includes/tools/customizer.php:84
 #, php-format
 msgid "Reading Customizer setting %s…"
 msgstr ""
 
 #. translators: %d: number of settings
-#: wp-ai-editor/includes/tools/customizer.php:99
+#: wp-ai-editor/includes/tools/customizer.php:112
 #, php-format
 msgid "Changing %d Customizer setting…"
 msgid_plural "Changing %d Customizer settings…"
@@ -848,7 +848,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %s: list of setting IDs
-#: wp-ai-editor/includes/tools/customizer.php:379
+#: wp-ai-editor/includes/tools/customizer.php:576
 #, php-format
 msgid "Customizer changed: %s"
 msgstr ""

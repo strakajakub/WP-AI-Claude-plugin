@@ -108,9 +108,25 @@ function wp_slash( $value ) { return is_array( $value ) ? array_map( 'wp_slash',
 function wp_text_diff( $a, $b, $args = [] ) { return $a === $b ? '' : '<table class="diff"><tr><td>' . htmlspecialchars( $a ) . '</td><td>' . htmlspecialchars( $b ) . '</td></tr></table>'; }
 function wp_unslash( $value ) { return is_string( $value ) ? stripslashes( $value ) : $value; }
 function wp_parse_args( $args, $defaults = [] ) { return array_merge( $defaults, (array) $args ); }
-function apply_filters( $hook, $value ) { return $value; }
+/** Real (minimal) filters, so filter-based integrations can be tested; actions stay no-ops. */
+function add_filter( $hook, $callback, $priority = 10, $args = 1 ) { $GLOBALS['wp_filters'][ $hook ][ $priority ][] = [ $callback, $args ]; return true; }
+function remove_filter( $hook, $callback, $priority = 10 ) {
+	foreach ( $GLOBALS['wp_filters'][ $hook ][ $priority ] ?? [] as $i => $f ) {
+		if ( $f[0] === $callback ) { unset( $GLOBALS['wp_filters'][ $hook ][ $priority ][ $i ] ); }
+	}
+	return true;
+}
+function apply_filters( $hook, $value, ...$extra ) {
+	$filters = $GLOBALS['wp_filters'][ $hook ] ?? [];
+	ksort( $filters );
+	foreach ( $filters as $callbacks ) {
+		foreach ( $callbacks as [ $callback, $args ] ) {
+			$value = $callback( ...array_slice( array_merge( [ $value ], $extra ), 0, max( 1, $args ) ) );
+		}
+	}
+	return $value;
+}
 function add_action() {}
-function add_filter() {}
 function do_action( $hook, ...$args ) { $GLOBALS['wp_test']['actions'][] = $hook; }
 function register_activation_hook() {}
 function plugin_dir_path( $file ) { return dirname( $file ) . '/'; }

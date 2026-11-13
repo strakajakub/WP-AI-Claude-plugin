@@ -45,7 +45,7 @@ When a conversation starts, the assistant checks whether the site uses a block (
 
 ### Theme settings (Customizer)
 
-The assistant can read and change everything the active theme offers in **Appearance → Customize** – for Astra e.g. the blog layout, container width, typography, colors, buttons, header and footer builder; the same works for GeneratePress, Kadence and other themes. The Customizer is loaded in the background the way its own screen does it, so every setting comes with the theme's label, choices and validation; changes are saved through the theme's own save hooks (so e.g. Astra rebuilds its CSS), shown for approval first and can be undone. Administrators only.
+The assistant can read and change everything the active theme offers in **Appearance → Customize** – for Astra e.g. the blog layout, container width, typography, colors, buttons, header and footer builder, including the settings inside Astra's setting groups; the same works for GeneratePress, Kadence and other themes. The Customizer is loaded in the background the way its own screen does it, so every setting comes with the theme's label, choices and validation. Changes are published like the Customizer's own Publish button (validated together, the theme's save hooks run – e.g. Astra rebuilds its CSS – and a changeset revision is kept), shown for approval first and can be undone. Administrators only.
 
 ## Requirements
 
