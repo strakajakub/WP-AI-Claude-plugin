@@ -31,8 +31,11 @@ jobs:
         if: matrix.php == '8.3'
         run: |
           php bin/make-pot.php
+          php bin/update-po.php
           php bin/po2mo.php
-          git diff --exit-code -- wp-ai-editor/languages
+          # Also fails on new, uncommitted files (e.g. a .mo for a new language).
+          git status --porcelain -- wp-ai-editor/languages
+          test -z "$(git status --porcelain -- wp-ai-editor/languages)"
 
   build:
     needs: test

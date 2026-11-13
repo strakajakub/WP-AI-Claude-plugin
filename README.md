@@ -74,7 +74,7 @@ The constant takes precedence over a key saved in Settings.
 | Ask before changes | Live changes | Live changes only / every change including drafts / never. |
 | Monthly budget (USD) | 0 (no limit) | The chat stops when the estimated spending this month reaches it. |
 | Live answers | On | Streams the answer as it is written. Needs the PHP cURL extension. |
-| Editors | Off | Lets editors use the chat with the tools their role allows (content, categories, media, SEO). Design tools, History and Settings stay admin-only. |
+| Editors | Off | Lets editors (anyone who can edit others' posts, e.g. also shop managers) use the chat with content, categories, media, SEO and – for shop managers – WooCommerce tools. Design tools (styles, CSS, templates, menus, site identity), History and Settings stay admin-only. |
 
 ### Claude Fable 5.2
 
@@ -144,11 +144,12 @@ To update or add a translation (no WP-CLI or gettext needed):
 
 ```bash
 php bin/make-pot.php     # extract strings → languages/wp-ai-editor.pot
-# edit / create languages/wp-ai-editor-<locale>.po (e.g. in Poedit, "Update from POT")
-php bin/po2mo.php        # compile every .po → .mo
+php bin/update-po.php    # merge the .pot into every .po (keeps existing translations)
+# translate the empty entries (e.g. in Poedit); a new language: copy the .pot to wp-ai-editor-<locale>.po
+php bin/po2mo.php        # compile every .po → .mo (fuzzy and incomplete entries are left out)
 ```
 
-CI fails when the `.pot` or a `.mo` is out of date.
+CI fails when the `.pot`, a `.po` or a `.mo` is out of date, a translation is missing, or a compiled file is not committed.
 
 ## Uninstall
 
@@ -177,7 +178,7 @@ wp-ai-editor/              # the plugin itself (contents of the ZIP)
 │   └── admin.php          # admin screens
 └── assets/                # admin.css, admin.js, editor.js (block editor sidebar)
 wp-ai-editor/languages/    # .pot and the Czech translation
-bin/                       # make-pot.php, po2mo.php (translation tools)
+bin/                       # make-pot.php, update-po.php, po2mo.php (translation tools)
 tests/                     # dependency-free tests (WordPress stubs, fake API)
 ```
 

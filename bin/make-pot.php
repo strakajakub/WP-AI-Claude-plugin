@@ -41,7 +41,7 @@ foreach ( $list as $path ) {
 
 	for ( $i = 0; $i < $count; $i++ ) {
 		$tok = $tokens[ $i ];
-		if ( is_array( $tok ) && $tok[0] === T_COMMENT && stripos( $tok[1], 'translators:' ) !== false ) {
+		if ( is_array( $tok ) && in_array( $tok[0], [ T_COMMENT, T_DOC_COMMENT ], true ) && stripos( $tok[1], 'translators:' ) !== false ) {
 			$comment = trim( preg_replace( '#^/\*+|\*+/$|^//#', '', $tok[1] ) );
 			continue;
 		}

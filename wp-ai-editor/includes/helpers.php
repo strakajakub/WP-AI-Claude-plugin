@@ -83,5 +83,6 @@ function wpaie_chat_capability(): string {
 }
 
 function wpaie_user_can_chat(): bool {
-	return current_user_can( WPAIE_CAPABILITY ) || current_user_can( wpaie_chat_capability() );
+	$cap = wpaie_chat_capability();
+	return current_user_can( $cap ) || ( $cap !== WPAIE_CAPABILITY && current_user_can( WPAIE_CAPABILITY ) );
 }

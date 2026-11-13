@@ -132,7 +132,7 @@ function wpaie_list_changes( int $page = 1, int $per_page = 50 ): array {
  * their own changes.
  */
 function wpaie_user_can_undo( object $change ): bool {
-	return current_user_can( 'manage_options' ) || ( (int) $change->user_id === get_current_user_id() && wpaie_user_can_chat() );
+	return current_user_can( WPAIE_CAPABILITY ) || ( (int) $change->user_id === get_current_user_id() && wpaie_user_can_chat() );
 }
 
 /**

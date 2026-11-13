@@ -15,6 +15,8 @@ add_action(
 	'wpaie_chat_header',
 	function ( array $state ) {
 		$list = wpaie_conversations_list();
+		/* translators: date and time format of the conversation list, see https://www.php.net/manual/datetime.format.php */
+		$date_format = __( 'M j, H:i', 'wp-ai-editor' );
 		?>
 		<label for="wpaie-conversations" class="screen-reader-text"><?php esc_html_e( 'Conversation', 'wp-ai-editor' ); ?></label>
 		<select id="wpaie-conversations">
@@ -23,7 +25,7 @@ add_action(
 			<?php endif; ?>
 			<?php foreach ( $list as $c ) : ?>
 				<option value="<?php echo esc_attr( $c['id'] ); ?>" <?php selected( $c['id'], $state['id'] ); ?>>
-					<?php echo esc_html( ( $c['title'] !== '' ? $c['title'] : __( '(untitled)', 'wp-ai-editor' ) ) . ' · ' . wp_date( 'j. n. H:i', (int) $c['updated'] ) ); ?>
+					<?php echo esc_html( ( $c['title'] !== '' ? $c['title'] : __( '(untitled)', 'wp-ai-editor' ) ) . ' · ' . wp_date( $date_format, (int) $c['updated'] ) ); ?>
 				</option>
 			<?php endforeach; ?>
 		</select>

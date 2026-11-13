@@ -163,8 +163,11 @@ function wpaie_tool_set_post_terms( array $in ) {
 	wpaie_record_change(
 		'set_post_terms',
 		sprintf(
-			/* translators: %s: post title */
-			$taxonomy === 'category' ? __( 'Categories of "%s" changed', 'wp-ai-editor' ) : __( 'Tags of "%s" changed', 'wp-ai-editor' ),
+			$taxonomy === 'category'
+				/* translators: %s: post title */
+				? __( 'Categories of "%s" changed', 'wp-ai-editor' )
+				/* translators: %s: post title */
+				: __( 'Tags of "%s" changed', 'wp-ai-editor' ),
 			$post->post_title
 		),
 		[

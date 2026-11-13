@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.0.1
+
+Fixes from a code review:
+- **Security:** design tools (global styles, Additional CSS, templates, menus, site identity) are administrator-only again when editors may use the chat. Roles such as WooCommerce's shop_manager have `edit_theme_options` and got them before. Writing Additional CSS also requires `edit_css`.
+- **Usage/budget:** monthly usage is stored as atomic counters (one `wp_options` row per value, incremented in SQL) and read from the database, so concurrent users no longer overwrite each other's costs and the budget cannot be exceeded that way. The 3.0.0 usage option is migrated automatically.
+- The system prompt describes only the tools of the conversation (an editor is not promised design changes or the admin-only History).
+- The date format of the conversation list is translatable.
+- Translation tools: `po2mo` skips fuzzy and incomplete entries and no longer crashes on an entry without `msgstr`; `make-pot` also reads `/** translators: */` comments; new `bin/update-po.php` merges the `.pot` into the `.po` files; the tests compare msgids (not just their count) and catch empty plural forms; CI also fails on uncommitted new translation files.
+- Admin-only checks use `WPAIE_CAPABILITY` everywhere.
+
 ## 3.0.0
 
 ### Approvals and undo

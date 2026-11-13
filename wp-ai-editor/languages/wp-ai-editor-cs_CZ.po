@@ -127,7 +127,7 @@ msgstr "≈ $%s"
 msgid "Estimated cost of this conversation"
 msgstr "Odhadovaná cena této konverzace"
 
-#: wp-ai-editor/includes/admin.php:114 wp-ai-editor/includes/integrations.php:22
+#: wp-ai-editor/includes/admin.php:114 wp-ai-editor/includes/integrations.php:24
 msgid "New chat"
 msgstr "Nový chat"
 
@@ -572,7 +572,7 @@ msgid "The image could not be saved: %s"
 msgstr "Obrázek se nepodařilo uložit: %s"
 
 #. translators: %d: maximum number of images
-#: wp-ai-editor/includes/images.php:155 wp-ai-editor/includes/integrations.php:91
+#: wp-ai-editor/includes/images.php:155 wp-ai-editor/includes/integrations.php:93
 #, php-format
 msgid "You can attach at most %d images to one message."
 msgstr "K jedné zprávě můžeš připojit nejvýš %d obrázků."
@@ -587,91 +587,96 @@ msgstr "Jeden z připojených obrázků nemáš oprávnění použít."
 msgid "The image could not be sent to the AI: %s"
 msgstr "Obrázek se nepodařilo poslat AI: %s"
 
+#. translators: date and time format of the conversation list, see https://www.php.net/manual/datetime.format.php
 #: wp-ai-editor/includes/integrations.php:19
+msgid "M j, H:i"
+msgstr "j. n. H:i"
+
+#: wp-ai-editor/includes/integrations.php:21
 msgid "Conversation"
 msgstr "Konverzace"
 
-#: wp-ai-editor/includes/integrations.php:26
+#: wp-ai-editor/includes/integrations.php:28
 msgid "(untitled)"
 msgstr "(bez názvu)"
 
-#: wp-ai-editor/includes/integrations.php:31
+#: wp-ai-editor/includes/integrations.php:33
 msgid "Delete this conversation"
 msgstr "Smazat tuto konverzaci"
 
-#: wp-ai-editor/includes/integrations.php:46
+#: wp-ai-editor/includes/integrations.php:48
 msgid "Attach an image (or paste / drop it)"
 msgstr "Připojit obrázek (nebo ho vlož / přetáhni)"
 
-#: wp-ai-editor/includes/integrations.php:46
+#: wp-ai-editor/includes/integrations.php:48
 msgid "Attach an image"
 msgstr "Připojit obrázek"
 
-#: wp-ai-editor/includes/integrations.php:94
+#: wp-ai-editor/includes/integrations.php:96
 msgid "Uploading image…"
 msgstr "Nahrávám obrázek…"
 
-#: wp-ai-editor/includes/integrations.php:95
+#: wp-ai-editor/includes/integrations.php:97
 msgid "Remove"
 msgstr "Odebrat"
 
 #. translators: %s: post title
-#: wp-ai-editor/includes/integrations.php:97 wp-ai-editor/includes/integrations.php:115
+#: wp-ai-editor/includes/integrations.php:99 wp-ai-editor/includes/integrations.php:117
 #, php-format
 msgid "Context: %s"
 msgstr "Kontext: %s"
 
-#: wp-ai-editor/includes/integrations.php:158
+#: wp-ai-editor/includes/integrations.php:160
 msgid "After the assistant changes this post, reload the editor to see the change. Save your own edits first."
 msgstr "Až asistent tento příspěvek změní, obnov editor, abys změnu viděl(a). Své vlastní úpravy nejdřív ulož."
 
-#: wp-ai-editor/includes/integrations.php:191
+#: wp-ai-editor/includes/integrations.php:193
 msgid "Ask the AI assistant about this page"
 msgstr "Zeptat se AI asistenta na tuto stránku"
 
 #. translators: 1: spent amount in USD, 2: monthly budget in USD
-#: wp-ai-editor/includes/pricing.php:161
+#: wp-ai-editor/includes/pricing.php:246
 #, php-format
 msgid "The monthly budget is used up ($%1$s of $%2$s). An administrator can raise it in AI Editor → Settings; it resets at the start of the month (UTC)."
 msgstr "Měsíční rozpočet je vyčerpaný ($%1$s z $%2$s). Administrátor ho může zvýšit v AI Editor → Nastavení; obnoví se na začátku měsíce (UTC)."
 
-#: wp-ai-editor/includes/pricing.php:180
+#: wp-ai-editor/includes/pricing.php:265
 msgid "Usage"
 msgstr "Spotřeba"
 
 #. translators: %s: amount in USD
-#: wp-ai-editor/includes/pricing.php:185
+#: wp-ai-editor/includes/pricing.php:270
 #, php-format
 msgid "Estimated spending this month: %s"
 msgstr "Odhadované útraty za tento měsíc: %s"
 
 #. translators: 1: budget in USD, 2: percentage used
-#: wp-ai-editor/includes/pricing.php:192
+#: wp-ai-editor/includes/pricing.php:277
 #, php-format
 msgid "of the %1$s budget (%2$s %%)."
 msgstr "z rozpočtu %1$s (%2$s %%)."
 
-#: wp-ai-editor/includes/pricing.php:206
+#: wp-ai-editor/includes/pricing.php:291
 msgid "Month"
 msgstr "Měsíc"
 
-#: wp-ai-editor/includes/pricing.php:207
+#: wp-ai-editor/includes/pricing.php:292
 msgid "Requests"
 msgstr "Požadavky"
 
-#: wp-ai-editor/includes/pricing.php:208
+#: wp-ai-editor/includes/pricing.php:293
 msgid "Input tokens"
 msgstr "Vstupní tokeny"
 
-#: wp-ai-editor/includes/pricing.php:209
+#: wp-ai-editor/includes/pricing.php:294
 msgid "Output tokens"
 msgstr "Výstupní tokeny"
 
-#: wp-ai-editor/includes/pricing.php:210
+#: wp-ai-editor/includes/pricing.php:295
 msgid "Estimated cost"
 msgstr "Odhadovaná cena"
 
-#: wp-ai-editor/includes/pricing.php:226
+#: wp-ai-editor/includes/pricing.php:311
 msgid "Estimate based on list prices; your bill in the Claude Console is authoritative."
 msgstr "Odhad podle ceníku; rozhodující je vyúčtování v Claude Console."
 
@@ -791,124 +796,124 @@ msgstr "Typ"
 msgid "Created \"%1$s\" (#%2$d)"
 msgstr "Vytvořeno „%1$s“ (#%2$d)"
 
-#: wp-ai-editor/includes/tools/design.php:17
+#: wp-ai-editor/includes/tools/design.php:19
 msgid "Checking site context…"
 msgstr "Zjišťuji kontext webu…"
 
-#: wp-ai-editor/includes/tools/design.php:25
+#: wp-ai-editor/includes/tools/design.php:27
 msgid "Reading global styles…"
 msgstr "Čtu globální styly…"
 
 #. translators: %s: theme.json section (settings or styles)
-#: wp-ai-editor/includes/tools/design.php:43
+#: wp-ai-editor/includes/tools/design.php:45
 #, php-format
 msgid "Updating global styles (%s)…"
 msgstr "Upravuji globální styly (%s)…"
 
-#: wp-ai-editor/includes/tools/design.php:52
+#: wp-ai-editor/includes/tools/design.php:54
 msgid "Loading templates…"
 msgstr "Načítám šablony…"
 
 #. translators: %s: template slug
-#: wp-ai-editor/includes/tools/design.php:68
+#: wp-ai-editor/includes/tools/design.php:70
 #, php-format
 msgid "Reading template \"%s\"…"
 msgstr "Čtu šablonu „%s“…"
 
 #. translators: %s: template slug
-#: wp-ai-editor/includes/tools/design.php:87
+#: wp-ai-editor/includes/tools/design.php:89
 #, php-format
 msgid "Saving template \"%s\"…"
 msgstr "Ukládám šablonu „%s“…"
 
-#: wp-ai-editor/includes/tools/design.php:96
+#: wp-ai-editor/includes/tools/design.php:98
 msgid "Reading Additional CSS…"
 msgstr "Čtu Doplňkový CSS…"
 
-#: wp-ai-editor/includes/tools/design.php:113
+#: wp-ai-editor/includes/tools/design.php:115
 msgid "Updating Additional CSS…"
 msgstr "Upravuji Doplňkový CSS…"
 
-#: wp-ai-editor/includes/tools/design.php:122
+#: wp-ai-editor/includes/tools/design.php:124
 msgid "Reading site identity…"
 msgstr "Čtu identitu webu…"
 
-#: wp-ai-editor/includes/tools/design.php:141
+#: wp-ai-editor/includes/tools/design.php:143
 msgid "Updating site identity…"
 msgstr "Upravuji identitu webu…"
 
-#: wp-ai-editor/includes/tools/design.php:150
+#: wp-ai-editor/includes/tools/design.php:152
 msgid "Loading menus…"
 msgstr "Načítám menu…"
 
 #. translators: %d: menu ID
-#: wp-ai-editor/includes/tools/design.php:171
+#: wp-ai-editor/includes/tools/design.php:173
 #, php-format
 msgid "Updating menu #%d…"
 msgstr "Upravuji menu #%d…"
 
 #. translators: %s: theme.json section
-#: wp-ai-editor/includes/tools/design.php:279
+#: wp-ai-editor/includes/tools/design.php:281
 #, php-format
 msgid "Global styles changed (%s)"
 msgstr "Globální styly změněny (%s)"
 
 #. translators: %s: template slug
-#: wp-ai-editor/includes/tools/design.php:406
+#: wp-ai-editor/includes/tools/design.php:408
 #, php-format
 msgid "Template \"%s\" changed"
 msgstr "Šablona „%s“ změněna"
 
-#: wp-ai-editor/includes/tools/design.php:431
+#: wp-ai-editor/includes/tools/design.php:433
 msgid "Appended to the end of Additional CSS:"
 msgstr "Přidáno na konec Doplňkového CSS:"
 
-#: wp-ai-editor/includes/tools/design.php:456
+#: wp-ai-editor/includes/tools/design.php:461
 msgid "Additional CSS appended"
 msgstr "Doplňkový CSS doplněn"
 
-#: wp-ai-editor/includes/tools/design.php:456
+#: wp-ai-editor/includes/tools/design.php:461
 msgid "Additional CSS replaced"
 msgstr "Doplňkový CSS přepsán"
 
-#: wp-ai-editor/includes/tools/design.php:496
+#: wp-ai-editor/includes/tools/design.php:501
 msgid "Site title"
 msgstr "Název webu"
 
-#: wp-ai-editor/includes/tools/design.php:499
+#: wp-ai-editor/includes/tools/design.php:504
 msgid "Tagline"
 msgstr "Podtitulek"
 
-#: wp-ai-editor/includes/tools/design.php:503 wp-ai-editor/includes/tools/design.php:505
+#: wp-ai-editor/includes/tools/design.php:508 wp-ai-editor/includes/tools/design.php:510
 msgid "Logo"
 msgstr "Logo"
 
-#: wp-ai-editor/includes/tools/design.php:503 wp-ai-editor/includes/tools/design.php:508 wp-ai-editor/includes/tools/media.php:232
+#: wp-ai-editor/includes/tools/design.php:508 wp-ai-editor/includes/tools/design.php:513 wp-ai-editor/includes/tools/media.php:232
 msgid "(removed)"
 msgstr "(odebráno)"
 
-#: wp-ai-editor/includes/tools/design.php:508
+#: wp-ai-editor/includes/tools/design.php:513
 msgid "Header image"
 msgstr "Obrázek záhlaví"
 
-#: wp-ai-editor/includes/tools/design.php:581
+#: wp-ai-editor/includes/tools/design.php:586
 msgid "Site identity changed"
 msgstr "Identita webu změněna"
 
 #. translators: %s: menu name
-#: wp-ai-editor/includes/tools/design.php:616
+#: wp-ai-editor/includes/tools/design.php:621
 #, php-format
 msgid "New item in %s"
 msgstr "Nová položka v %s"
 
 #. translators: 1: menu item label, 2: menu name
-#: wp-ai-editor/includes/tools/design.php:684
+#: wp-ai-editor/includes/tools/design.php:689
 #, php-format
 msgid "Menu item \"%1$s\" added to %2$s"
 msgstr "Položka menu „%1$s“ přidána do %2$s"
 
 #. translators: 1: old label, 2: new label
-#: wp-ai-editor/includes/tools/design.php:715
+#: wp-ai-editor/includes/tools/design.php:720
 #, php-format
 msgid "Menu item \"%1$s\" renamed to \"%2$s\""
 msgstr "Položka menu „%1$s“ přejmenována na „%2$s“"
@@ -1024,22 +1029,23 @@ msgid "Replacing \"%1$s\" with \"%2$s\"…"
 msgstr "Nahrazuji „%1$s“ za „%2$s“…"
 
 #. translators: %s: post title
-#: wp-ai-editor/includes/tools/taxonomy-search.php:167
+#: wp-ai-editor/includes/tools/taxonomy-search.php:168
 #, php-format
 msgid "Categories of \"%s\" changed"
 msgstr "Kategorie „%s“ změněny"
 
-#: wp-ai-editor/includes/tools/taxonomy-search.php:167
+#. translators: %s: post title
+#: wp-ai-editor/includes/tools/taxonomy-search.php:170
 #, php-format
 msgid "Tags of \"%s\" changed"
 msgstr "Štítky „%s“ změněny"
 
-#: wp-ai-editor/includes/tools/taxonomy-search.php:291
+#: wp-ai-editor/includes/tools/taxonomy-search.php:294
 msgid "No post contains the text, nothing would change."
 msgstr "Žádný příspěvek tento text neobsahuje, nic by se nezměnilo."
 
 #. translators: %d: number of posts
-#: wp-ai-editor/includes/tools/taxonomy-search.php:296
+#: wp-ai-editor/includes/tools/taxonomy-search.php:299
 #, php-format
 msgid "%d post will change:"
 msgid_plural "%d posts will change:"
@@ -1048,7 +1054,7 @@ msgstr[1] "Změní se %d příspěvky:"
 msgstr[2] "Změní se %d příspěvků:"
 
 #. translators: 1: searched text, 2: replacement, 3: number of posts
-#: wp-ai-editor/includes/tools/taxonomy-search.php:351
+#: wp-ai-editor/includes/tools/taxonomy-search.php:354
 #, php-format
 msgid "\"%1$s\" → \"%2$s\" in %3$d posts"
 msgstr "„%1$s“ → „%2$s“ ve %3$d příspěvcích"

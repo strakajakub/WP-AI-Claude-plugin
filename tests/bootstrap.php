@@ -49,9 +49,31 @@ class WPAIE_Test_DB {
 	}
 	public function prepare( $sql, ...$args ) { return [ $sql, $args ]; }
 	public function get_row( $query ) { return $this->rows[ (int) $query[1][0] ] ?? null; }
-	public function query( $query ) { return 0; }
+	/** @var array<string,int> option counters (usage) */
+	public $options_table = [];
+	public $options = 'wp_options';
+	public function query( $query ) {
+		if ( is_array( $query ) && str_contains( $query[0], 'ON DUPLICATE KEY UPDATE' ) ) {
+			[ $name, $amount ] = $query[1];
+			$this->options_table[ $name ] = ( $this->options_table[ $name ] ?? 0 ) + (int) $amount;
+			return 1;
+		}
+		return 0;
+	}
 	public function get_var( $query ) { return count( $this->rows ); }
-	public function get_results( $query ) { return array_reverse( array_values( $this->rows ) ); }
+	public function get_results( $query ) {
+		if ( is_array( $query ) && str_contains( $query[0], 'option_name LIKE' ) ) {
+			$prefix = rtrim( $query[1][0], '%' );
+			$out    = [];
+			foreach ( $this->options_table as $name => $value ) {
+				if ( str_starts_with( $name, $prefix ) ) {
+					$out[] = (object) [ 'option_name' => $name, 'option_value' => (string) $value ];
+				}
+			}
+			return $out;
+		}
+		return array_reverse( array_values( $this->rows ) );
+	}
 	public $posts = 'wp_posts';
 	public function esc_like( $text ) { return $text; }
 	/** Search stub: returns IDs of test posts whose title or content contains the LIKE needle. */
@@ -120,6 +142,8 @@ function add_settings_error( $setting, $code, $message ) { $GLOBALS['wp_test']['
 
 function get_option( $name, $default = false ) { return $GLOBALS['wp_test']['options'][ $name ] ?? $default; }
 function update_option( $name, $value, $autoload = null ) { $GLOBALS['wp_test']['options'][ $name ] = $value; return true; }
+function delete_option( $name ) { unset( $GLOBALS['wp_test']['options'][ $name ], $GLOBALS['wpdb']->options_table[ $name ] ); return true; }
+function wp_cache_delete( $key, $group = '' ) { return true; }
 
 function get_user_meta( $user, $key, $single = false ) { return $GLOBALS['wp_test']['user_meta'][ $user ][ $key ] ?? ''; }
 function update_user_meta( $user, $key, $value ) { $GLOBALS['wp_test']['user_meta'][ $user ][ $key ] = wp_unslash( $value ); return true; }
@@ -175,7 +199,8 @@ function wpaie_test_reset(): void {
 		'posts'           => [],
 		'meta'            => [],
 	];
-	$GLOBALS['wpdb']->rows      = [];
+	$GLOBALS['wpdb']->rows          = [];
+	$GLOBALS['wpdb']->options_table = [];
 	$GLOBALS['wpdb']->insert_id = 0;
 }
 wpaie_test_reset();

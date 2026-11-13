@@ -653,9 +653,94 @@ test( 'translations: .pot covers the code, Czech .mo is complete', function () {
 	$pot = (string) file_get_contents( dirname( __DIR__ ) . '/wp-ai-editor/languages/wp-ai-editor.pot' );
 	$po  = (string) file_get_contents( dirname( __DIR__ ) . '/wp-ai-editor/languages/wp-ai-editor-cs_CZ.po' );
 	check( str_contains( $pot, 'msgid "The assistant wants to make this change:"' ), '.pot contains UI strings' );
-	check( substr_count( $pot, "\nmsgid \"" ) === substr_count( $po, "\nmsgid \"" ), '.po has every .pot entry' );
-	check( ! preg_match( '/^msgstr ""\n\n/m', $po . "\n" ), 'no empty translation' );
+	// Same msgids (and plurals), not just the same number of them.
+	$ids = function ( string $text ): array {
+		preg_match_all( '/^msgid (".*")\n(?:msgid_plural (".*")\n)?/m', $text, $m, PREG_SET_ORDER );
+		$out = array_map( fn( $e ) => $e[1] . ( $e[2] ?? '' ), $m );
+		sort( $out );
+		return $out;
+	};
+	check( $ids( $pot ) === $ids( $po ), '.po has exactly the .pot entries' );
+	check( ! preg_match( '/^msgstr(\[\d+\])? ""\n(?!")/m', preg_replace( '/\A.*?\n\n/s', '', $po ) . "\n" ), 'no empty translation or plural form' );
+	check( ! str_contains( $po, '#, fuzzy' ), 'no fuzzy translation' );
 	check( is_file( dirname( __DIR__ ) . '/wp-ai-editor/languages/wp-ai-editor-cs_CZ.mo' ), '.mo compiled' );
+} );
+
+test( 'translation tools: fuzzy, incomplete and broken entries are not compiled', function () {
+	require_once dirname( __DIR__ ) . '/bin/po-lib.php';
+	$file = tempnam( sys_get_temp_dir(), 'po' );
+	file_put_contents(
+		$file,
+		"msgid \"\"\nmsgstr \"Plural-Forms: nplurals=3;\\n\"\n\n"
+		. "msgid \"OK\"\nmsgstr \"Dobře\"\n\n"
+		. "#, fuzzy, php-format\nmsgid \"Guess %s\"\nmsgstr \"Odhad %s\"\n\n"
+		. "msgid \"%d file\"\nmsgid_plural \"%d files\"\nmsgstr[0] \"%d soubor\"\nmsgstr[1] \"\"\nmsgstr[2] \"%d souborů\"\n\n"
+		. "msgid \"Multi\"\nmsgstr \"\"\n\"line\"\n\n"
+		. "msgid \"No translation at all\"\n"
+	);
+	$entries = po_parse( $file );
+	unlink( $file );
+	check( ( $entries['OK'] ?? '' ) === 'Dobře' && ( $entries['Multi'] ?? '' ) === 'line', 'normal and multi-line entries kept' );
+	check( ! isset( $entries['Guess %s'] ), 'fuzzy entry skipped' );
+	check( ! isset( $entries["%d file\0%d files"] ), 'plural with a missing form skipped' );
+	check( ! isset( $entries['No translation at all'] ) && isset( $entries[''] ), 'entry without msgstr does not crash; header kept' );
+} );
+
+test( 'review fix: roles with edit_theme_options (e.g. shop_manager) get no design tools', function () {
+	// shop_manager: edit_others_posts + edit_theme_options, but not manage_options.
+	$GLOBALS['wp_test']['denied_caps'] = [ 'manage_options' ];
+	update_option( WPAIE_OPTION_KEY, [ 'allow_editors' => true ] );
+	$names = wpaie_available_tool_names();
+	foreach ( [ 'update_custom_css', 'update_theme_json', 'update_template_content', 'update_menu', 'update_site_identity', 'get_theme_json' ] as $tool ) {
+		check( ! in_array( $tool, $names, true ), "$tool hidden" );
+	}
+	check( is_wp_error( wpaie_run_tool( 'update_custom_css', [ 'css' => 'a{}' ] ) ), 'and refused when called' );
+
+	// An administrator without edit_css (e.g. DISALLOW_UNFILTERED_HTML on multisite).
+	$GLOBALS['wp_test']['denied_caps'] = [ 'edit_css' ];
+	$out = wpaie_run_tool( 'update_custom_css', [ 'css' => 'a{}' ] );
+	check( is_wp_error( $out ) && $GLOBALS['wp_test']['custom_css'] === '', 'CSS needs edit_css' );
+} );
+
+test( 'review fix: usage counters are atomic increments (no lost updates)', function () {
+	$a    = wpaie_empty_conversation();
+	$b    = wpaie_empty_conversation();
+	$resp = fn( $tokens ) => json_decode( json_encode( [ 'model' => 'claude-opus-5-5', 'usage' => [ 'input_tokens' => $tokens, 'output_tokens' => 0 ] ] ) );
+
+	// Request A reads the total (budget check), then B records its cost, then A records its own.
+	wpaie_month_cost();
+	wpaie_track_response_usage( $b, $resp( 125000 ), 'claude-opus-5-5' ); // $0.50
+	wpaie_track_response_usage( $a, $resp( 250000 ), 'claude-opus-5-5' ); // $1.00
+	check( abs( wpaie_month_cost() - 1.5 ) < 1e-9, 'both costs counted' );
+	check( wpaie_usage_by_month()[ gmdate( 'Y-m' ) ]['requests'] === 2, 'both requests counted' );
+
+	// The single 3.0.0 option is migrated into the counters.
+	wpaie_test_reset();
+	update_option( 'wpaie_usage', [ '2026-01' => [ 'cost' => 2.5, 'input' => 10, 'output' => 5, 'requests' => 3 ] ] );
+	$months = wpaie_usage_by_month();
+	check( abs( $months['2026-01']['cost'] - 2.5 ) < 1e-9 && $months['2026-01']['requests'] === 3, 'old usage migrated' );
+	check( get_option( 'wpaie_usage', null ) === null, 'old option removed' );
+} );
+
+// Stubs for the system prompt.
+function get_bloginfo( $what = '' ) { return $what === 'version' ? '6.8' : 'Test site'; }
+function wp_get_theme() { return new class() { public function get( $k ) { return $k === 'Name' ? 'Astra' : '4.0'; } }; }
+function wp_is_block_theme() { return false; }
+function get_block_templates() { return []; }
+function wp_theme_has_theme_json() { return false; }
+function get_locale() { return 'cs_CZ'; }
+function get_stylesheet() { return 'astra'; }
+require_once dirname( __DIR__ ) . '/wp-ai-editor/includes/site-context.php';
+
+test( 'review fix: the system prompt describes only the tools of the conversation', function () {
+	$admin = wpaie_system_prompt( wpaie_available_tool_names() );
+	check( str_contains( $admin, 'global styles' ) && str_contains( $admin, 'History page' ), 'administrator: design tools and History mentioned' );
+
+	$GLOBALS['wp_test']['denied_caps'] = [ 'manage_options', 'edit_theme_options' ];
+	update_option( WPAIE_OPTION_KEY, [ 'allow_editors' => true ] );
+	$editor = wpaie_system_prompt( wpaie_available_tool_names() );
+	check( ! str_contains( $editor, 'global styles (theme.json' ) && ! str_contains( $editor, 'History page' ), 'editor: no design tools, no History page' );
+	check( str_contains( $editor, 'not an administrator' ) && str_contains( $editor, 'search & replace' ), 'editor: told to ask an administrator; content abilities listed' );
 } );
 
 echo "\n" . ( $failures ? "$failures of $count checks FAILED\n" : "All $count checks passed\n" );

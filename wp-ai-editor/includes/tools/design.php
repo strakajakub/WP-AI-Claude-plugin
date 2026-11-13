@@ -1,13 +1,15 @@
 <?php
 /**
  * Design tools: global styles, templates, Additional CSS, site identity, menus.
- * All of them change the live site immediately and need the edit_theme_options capability.
+ * They change the whole site immediately, so they are for administrators only (WPAIE_CAPABILITY) –
+ * also when editors may use the chat: other roles such as WooCommerce's shop_manager have
+ * edit_theme_options, but should not get site-wide design changes through the assistant.
  */
 
 defined( 'ABSPATH' ) || exit;
 
 function wpaie_design_tools(): array {
-	$cap = 'edit_theme_options';
+	$cap = WPAIE_CAPABILITY;
 	return [
 		[
 			'name'         => 'get_site_context',
@@ -135,7 +137,7 @@ function wpaie_design_tools(): array {
 					'remove_header_image' => [ 'type' => 'boolean', 'description' => 'true = remove the header image.' ],
 				],
 			],
-			'cap'          => 'manage_options',
+			'cap'          => $cap,
 			'write'        => true,
 			'live'         => true,
 			'label'        => fn() => __( 'Updating site identity…', 'wp-ai-editor' ),
@@ -440,6 +442,9 @@ function wpaie_tool_update_custom_css( array $in ) {
 	}
 	if ( ! in_array( $mode, [ 'append', 'replace' ], true ) ) {
 		return wpaie_tool_error( 'mode must be "append" or "replace".' );
+	}
+	if ( ! current_user_can( 'edit_css' ) ) {
+		return wpaie_tool_error( 'The current user is not allowed to edit Additional CSS on this site.' );
 	}
 	if ( preg_match( '#</?\w+#', $css ) ) {
 		return wpaie_tool_error( 'CSS must not contain HTML tags.' );

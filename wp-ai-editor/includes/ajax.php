@@ -147,10 +147,10 @@ function wpaie_ajax_chat(): void {
 	$state = wpaie_conversation_load( wpaie_request_conversation_id() );
 	if ( ! $state['messages'] ) {
 		// Frozen for the whole conversation (see conversation.php).
-		$state['system'] = wpaie_system_prompt();
 		$state['tools']  = wpaie_available_tool_names();
+		$state['system'] = wpaie_system_prompt( $state['tools'] );
 	} elseif ( $state['system'] === '' ) {
-		$state['system'] = wpaie_system_prompt();
+		$state['system'] = wpaie_system_prompt( $state['tools'] ?: wpaie_available_tool_names() );
 	}
 
 	$extra = function_exists( 'wpaie_request_extra_blocks' ) ? wpaie_request_extra_blocks( $state, $api_key ) : [];

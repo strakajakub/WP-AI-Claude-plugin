@@ -124,7 +124,7 @@ msgstr ""
 msgid "Estimated cost of this conversation"
 msgstr ""
 
-#: wp-ai-editor/includes/admin.php:114 wp-ai-editor/includes/integrations.php:22
+#: wp-ai-editor/includes/admin.php:114 wp-ai-editor/includes/integrations.php:24
 msgid "New chat"
 msgstr ""
 
@@ -569,7 +569,7 @@ msgid "The image could not be saved: %s"
 msgstr ""
 
 #. translators: %d: maximum number of images
-#: wp-ai-editor/includes/images.php:155 wp-ai-editor/includes/integrations.php:91
+#: wp-ai-editor/includes/images.php:155 wp-ai-editor/includes/integrations.php:93
 #, php-format
 msgid "You can attach at most %d images to one message."
 msgstr ""
@@ -584,91 +584,96 @@ msgstr ""
 msgid "The image could not be sent to the AI: %s"
 msgstr ""
 
+#. translators: date and time format of the conversation list, see https://www.php.net/manual/datetime.format.php
 #: wp-ai-editor/includes/integrations.php:19
+msgid "M j, H:i"
+msgstr ""
+
+#: wp-ai-editor/includes/integrations.php:21
 msgid "Conversation"
 msgstr ""
 
-#: wp-ai-editor/includes/integrations.php:26
+#: wp-ai-editor/includes/integrations.php:28
 msgid "(untitled)"
 msgstr ""
 
-#: wp-ai-editor/includes/integrations.php:31
+#: wp-ai-editor/includes/integrations.php:33
 msgid "Delete this conversation"
 msgstr ""
 
-#: wp-ai-editor/includes/integrations.php:46
+#: wp-ai-editor/includes/integrations.php:48
 msgid "Attach an image (or paste / drop it)"
 msgstr ""
 
-#: wp-ai-editor/includes/integrations.php:46
+#: wp-ai-editor/includes/integrations.php:48
 msgid "Attach an image"
 msgstr ""
 
-#: wp-ai-editor/includes/integrations.php:94
+#: wp-ai-editor/includes/integrations.php:96
 msgid "Uploading image…"
 msgstr ""
 
-#: wp-ai-editor/includes/integrations.php:95
+#: wp-ai-editor/includes/integrations.php:97
 msgid "Remove"
 msgstr ""
 
 #. translators: %s: post title
-#: wp-ai-editor/includes/integrations.php:97 wp-ai-editor/includes/integrations.php:115
+#: wp-ai-editor/includes/integrations.php:99 wp-ai-editor/includes/integrations.php:117
 #, php-format
 msgid "Context: %s"
 msgstr ""
 
-#: wp-ai-editor/includes/integrations.php:158
+#: wp-ai-editor/includes/integrations.php:160
 msgid "After the assistant changes this post, reload the editor to see the change. Save your own edits first."
 msgstr ""
 
-#: wp-ai-editor/includes/integrations.php:191
+#: wp-ai-editor/includes/integrations.php:193
 msgid "Ask the AI assistant about this page"
 msgstr ""
 
 #. translators: 1: spent amount in USD, 2: monthly budget in USD
-#: wp-ai-editor/includes/pricing.php:161
+#: wp-ai-editor/includes/pricing.php:246
 #, php-format
 msgid "The monthly budget is used up ($%1$s of $%2$s). An administrator can raise it in AI Editor → Settings; it resets at the start of the month (UTC)."
 msgstr ""
 
-#: wp-ai-editor/includes/pricing.php:180
+#: wp-ai-editor/includes/pricing.php:265
 msgid "Usage"
 msgstr ""
 
 #. translators: %s: amount in USD
-#: wp-ai-editor/includes/pricing.php:185
+#: wp-ai-editor/includes/pricing.php:270
 #, php-format
 msgid "Estimated spending this month: %s"
 msgstr ""
 
 #. translators: 1: budget in USD, 2: percentage used
-#: wp-ai-editor/includes/pricing.php:192
+#: wp-ai-editor/includes/pricing.php:277
 #, php-format
 msgid "of the %1$s budget (%2$s %%)."
 msgstr ""
 
-#: wp-ai-editor/includes/pricing.php:206
+#: wp-ai-editor/includes/pricing.php:291
 msgid "Month"
 msgstr ""
 
-#: wp-ai-editor/includes/pricing.php:207
+#: wp-ai-editor/includes/pricing.php:292
 msgid "Requests"
 msgstr ""
 
-#: wp-ai-editor/includes/pricing.php:208
+#: wp-ai-editor/includes/pricing.php:293
 msgid "Input tokens"
 msgstr ""
 
-#: wp-ai-editor/includes/pricing.php:209
+#: wp-ai-editor/includes/pricing.php:294
 msgid "Output tokens"
 msgstr ""
 
-#: wp-ai-editor/includes/pricing.php:210
+#: wp-ai-editor/includes/pricing.php:295
 msgid "Estimated cost"
 msgstr ""
 
-#: wp-ai-editor/includes/pricing.php:226
+#: wp-ai-editor/includes/pricing.php:311
 msgid "Estimate based on list prices; your bill in the Claude Console is authoritative."
 msgstr ""
 
@@ -788,124 +793,124 @@ msgstr ""
 msgid "Created \"%1$s\" (#%2$d)"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/design.php:17
+#: wp-ai-editor/includes/tools/design.php:19
 msgid "Checking site context…"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/design.php:25
+#: wp-ai-editor/includes/tools/design.php:27
 msgid "Reading global styles…"
 msgstr ""
 
 #. translators: %s: theme.json section (settings or styles)
-#: wp-ai-editor/includes/tools/design.php:43
+#: wp-ai-editor/includes/tools/design.php:45
 #, php-format
 msgid "Updating global styles (%s)…"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/design.php:52
+#: wp-ai-editor/includes/tools/design.php:54
 msgid "Loading templates…"
 msgstr ""
 
 #. translators: %s: template slug
-#: wp-ai-editor/includes/tools/design.php:68
+#: wp-ai-editor/includes/tools/design.php:70
 #, php-format
 msgid "Reading template \"%s\"…"
 msgstr ""
 
 #. translators: %s: template slug
-#: wp-ai-editor/includes/tools/design.php:87
+#: wp-ai-editor/includes/tools/design.php:89
 #, php-format
 msgid "Saving template \"%s\"…"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/design.php:96
+#: wp-ai-editor/includes/tools/design.php:98
 msgid "Reading Additional CSS…"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/design.php:113
+#: wp-ai-editor/includes/tools/design.php:115
 msgid "Updating Additional CSS…"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/design.php:122
+#: wp-ai-editor/includes/tools/design.php:124
 msgid "Reading site identity…"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/design.php:141
+#: wp-ai-editor/includes/tools/design.php:143
 msgid "Updating site identity…"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/design.php:150
+#: wp-ai-editor/includes/tools/design.php:152
 msgid "Loading menus…"
 msgstr ""
 
 #. translators: %d: menu ID
-#: wp-ai-editor/includes/tools/design.php:171
+#: wp-ai-editor/includes/tools/design.php:173
 #, php-format
 msgid "Updating menu #%d…"
 msgstr ""
 
 #. translators: %s: theme.json section
-#: wp-ai-editor/includes/tools/design.php:279
+#: wp-ai-editor/includes/tools/design.php:281
 #, php-format
 msgid "Global styles changed (%s)"
 msgstr ""
 
 #. translators: %s: template slug
-#: wp-ai-editor/includes/tools/design.php:406
+#: wp-ai-editor/includes/tools/design.php:408
 #, php-format
 msgid "Template \"%s\" changed"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/design.php:431
+#: wp-ai-editor/includes/tools/design.php:433
 msgid "Appended to the end of Additional CSS:"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/design.php:456
+#: wp-ai-editor/includes/tools/design.php:461
 msgid "Additional CSS appended"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/design.php:456
+#: wp-ai-editor/includes/tools/design.php:461
 msgid "Additional CSS replaced"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/design.php:496
+#: wp-ai-editor/includes/tools/design.php:501
 msgid "Site title"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/design.php:499
+#: wp-ai-editor/includes/tools/design.php:504
 msgid "Tagline"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/design.php:503 wp-ai-editor/includes/tools/design.php:505
+#: wp-ai-editor/includes/tools/design.php:508 wp-ai-editor/includes/tools/design.php:510
 msgid "Logo"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/design.php:503 wp-ai-editor/includes/tools/design.php:508 wp-ai-editor/includes/tools/media.php:232
+#: wp-ai-editor/includes/tools/design.php:508 wp-ai-editor/includes/tools/design.php:513 wp-ai-editor/includes/tools/media.php:232
 msgid "(removed)"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/design.php:508
+#: wp-ai-editor/includes/tools/design.php:513
 msgid "Header image"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/design.php:581
+#: wp-ai-editor/includes/tools/design.php:586
 msgid "Site identity changed"
 msgstr ""
 
 #. translators: %s: menu name
-#: wp-ai-editor/includes/tools/design.php:616
+#: wp-ai-editor/includes/tools/design.php:621
 #, php-format
 msgid "New item in %s"
 msgstr ""
 
 #. translators: 1: menu item label, 2: menu name
-#: wp-ai-editor/includes/tools/design.php:684
+#: wp-ai-editor/includes/tools/design.php:689
 #, php-format
 msgid "Menu item \"%1$s\" added to %2$s"
 msgstr ""
 
 #. translators: 1: old label, 2: new label
-#: wp-ai-editor/includes/tools/design.php:715
+#: wp-ai-editor/includes/tools/design.php:720
 #, php-format
 msgid "Menu item \"%1$s\" renamed to \"%2$s\""
 msgstr ""
@@ -1019,22 +1024,23 @@ msgid "Replacing \"%1$s\" with \"%2$s\"…"
 msgstr ""
 
 #. translators: %s: post title
-#: wp-ai-editor/includes/tools/taxonomy-search.php:167
+#: wp-ai-editor/includes/tools/taxonomy-search.php:168
 #, php-format
 msgid "Categories of \"%s\" changed"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/taxonomy-search.php:167
+#. translators: %s: post title
+#: wp-ai-editor/includes/tools/taxonomy-search.php:170
 #, php-format
 msgid "Tags of \"%s\" changed"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/taxonomy-search.php:291
+#: wp-ai-editor/includes/tools/taxonomy-search.php:294
 msgid "No post contains the text, nothing would change."
 msgstr ""
 
 #. translators: %d: number of posts
-#: wp-ai-editor/includes/tools/taxonomy-search.php:296
+#: wp-ai-editor/includes/tools/taxonomy-search.php:299
 #, php-format
 msgid "%d post will change:"
 msgid_plural "%d posts will change:"
@@ -1042,7 +1048,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: 1: searched text, 2: replacement, 3: number of posts
-#: wp-ai-editor/includes/tools/taxonomy-search.php:351
+#: wp-ai-editor/includes/tools/taxonomy-search.php:354
 #, php-format
 msgid "\"%1$s\" → \"%2$s\" in %3$d posts"
 msgstr ""

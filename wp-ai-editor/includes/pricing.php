@@ -110,36 +110,121 @@ function wpaie_track_response_usage( array &$state, $response, string $model ): 
 	$state['usage']['input']  += $usage['input'];
 	$state['usage']['output'] += $usage['output'];
 
-	$all   = get_option( WPAIE_USAGE_OPTION, [] );
-	$all   = is_array( $all ) ? $all : [];
-	$month = gmdate( 'Y-m' );
-	$row   = $all[ $month ] ?? [
-		'cost'     => 0.0,
-		'input'    => 0,
-		'output'   => 0,
-		'requests' => 0,
-	];
-
-	$row['cost']     += $usage['cost'];
-	$row['input']    += $usage['input'];
-	$row['output']   += $usage['output'];
-	$row['requests'] += 1;
-	$all[ $month ]    = $row;
-
-	krsort( $all );
-	update_option( WPAIE_USAGE_OPTION, array_slice( $all, 0, WPAIE_USAGE_KEEP_MONTHS, true ), false );
+	wpaie_usage_increment(
+		gmdate( 'Y-m' ),
+		[
+			'cost'     => (int) round( $usage['cost'] * 1000000 ),
+			'input'    => $usage['input'],
+			'output'   => $usage['output'],
+			'requests' => 1,
+		]
+	);
 
 	return $usage['cost'];
+}
+
+/**
+ * Atomically add to a month's counters.
+ *
+ * Every counter is its own row in wp_options (wpaie_usage_<Y-m>_<field>, cost in micro-USD) and is
+ * incremented in SQL, so concurrent requests of several users never overwrite each other – a
+ * read-modify-write of one shared option would lose costs and let the budget be exceeded.
+ */
+function wpaie_usage_increment( string $month, array $values ): void {
+	global $wpdb;
+	wpaie_migrate_usage_option();
+	foreach ( $values as $field => $amount ) {
+		$name = WPAIE_USAGE_OPTION . '_' . $month . '_' . $field;
+		$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$wpdb->prepare(
+				"INSERT INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %d, 'no')
+				 ON DUPLICATE KEY UPDATE option_value = CAST(option_value AS SIGNED) + %d",
+				$name,
+				(int) $amount,
+				(int) $amount
+			)
+		);
+		wp_cache_delete( $name, 'options' );
+	}
+	wp_cache_delete( 'notoptions', 'options' );
+
+	if ( wp_rand( 1, 50 ) === 1 ) {
+		wpaie_prune_usage();
+	}
+}
+
+/**
+ * Raw counters [ month => [ field => int ] ], read from the database (not the request cache).
+ */
+function wpaie_usage_rows(): array {
+	global $wpdb;
+	$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->prepare(
+			"SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name LIKE %s",
+			$wpdb->esc_like( WPAIE_USAGE_OPTION . '_' ) . '%'
+		)
+	);
+	$out = [];
+	foreach ( (array) $rows as $row ) {
+		if ( preg_match( '/^wpaie_usage_(\d{4}-\d{2})_(cost|input|output|requests)$/', (string) $row->option_name, $m ) ) {
+			$out[ $m[1] ][ $m[2] ] = (int) $row->option_value;
+		}
+	}
+	return $out;
+}
+
+function wpaie_prune_usage(): void {
+	$keep = gmdate( 'Y-m', strtotime( gmdate( 'Y-m-01' ) . ' -' . ( WPAIE_USAGE_KEEP_MONTHS - 1 ) . ' months' ) );
+	foreach ( array_keys( wpaie_usage_rows() ) as $month ) {
+		if ( $month < $keep ) {
+			foreach ( [ 'cost', 'input', 'output', 'requests' ] as $field ) {
+				delete_option( WPAIE_USAGE_OPTION . '_' . $month . '_' . $field );
+			}
+		}
+	}
+}
+
+/**
+ * Plugin 3.0.0 kept all months in one wpaie_usage option; move it to the counters once.
+ */
+function wpaie_migrate_usage_option(): void {
+	$old = get_option( WPAIE_USAGE_OPTION, null );
+	if ( ! is_array( $old ) ) {
+		return;
+	}
+	// Deleted first, so the increments below (which call this again) do not migrate twice.
+	delete_option( WPAIE_USAGE_OPTION );
+	foreach ( $old as $month => $row ) {
+		if ( preg_match( '/^\d{4}-\d{2}$/', (string) $month ) ) {
+			wpaie_usage_increment(
+				(string) $month,
+				[
+					'cost'     => (int) round( (float) ( $row['cost'] ?? 0 ) * 1000000 ),
+					'input'    => (int) ( $row['input'] ?? 0 ),
+					'output'   => (int) ( $row['output'] ?? 0 ),
+					'requests' => (int) ( $row['requests'] ?? 0 ),
+				]
+			);
+		}
+	}
 }
 
 /**
  * @return array<string,array{cost:float,input:int,output:int,requests:int}> month (Y-m) => totals, newest first
  */
 function wpaie_usage_by_month(): array {
-	$all = get_option( WPAIE_USAGE_OPTION, [] );
-	$all = is_array( $all ) ? $all : [];
-	krsort( $all );
-	return $all;
+	wpaie_migrate_usage_option();
+	$out = [];
+	foreach ( wpaie_usage_rows() as $month => $row ) {
+		$out[ $month ] = [
+			'cost'     => ( $row['cost'] ?? 0 ) / 1000000,
+			'input'    => $row['input'] ?? 0,
+			'output'   => $row['output'] ?? 0,
+			'requests' => $row['requests'] ?? 0,
+		];
+	}
+	krsort( $out );
+	return $out;
 }
 
 function wpaie_month_cost(): float {
