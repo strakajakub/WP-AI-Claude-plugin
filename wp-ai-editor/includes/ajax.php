@@ -53,7 +53,7 @@ function wpaie_acquire_lock(): void {
 	if ( get_transient( $key ) ) {
 		wpaie_ajax_fail( __( 'A previous request is still running (maybe in another tab). Please wait for it to finish.', 'wp-ai-editor' ), 'locked' );
 	}
-	set_transient( $key, time(), WPAIE_HTTP_TIMEOUT + 120 );
+	set_transient( $key, time(), wpaie_http_timeout( wpaie_get_settings()['model'] ) + 120 );
 	register_shutdown_function( 'wpaie_release_lock' );
 }
 

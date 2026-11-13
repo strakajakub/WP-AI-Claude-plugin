@@ -13,6 +13,10 @@ define( 'WPAIE_API_BASE', 'https://api.anthropic.com/v1' );
 define( 'WPAIE_API_VERSION', '2026-10-21' );
 define( 'WPAIE_MAX_TOKENS', 16000 );     // Room for adaptive thinking + the reply.
 define( 'WPAIE_HTTP_TIMEOUT', 240 );     // Seconds for one Messages API call.
+
+/** Claude Fable 5.2 thinks longer per turn: more output room and a longer HTTP timeout. */
+define( 'WPAIE_FABLE_MAX_TOKENS', 32000 );
+define( 'WPAIE_FABLE_HTTP_TIMEOUT', 600 );
 define( 'WPAIE_MAX_ATTEMPTS', 3 );       // 1 try + 2 retries on transient errors.
 
 /** Transient that remembers the API rejected the optional beta features (graceful degradation). */
@@ -22,7 +26,22 @@ define( 'WPAIE_NO_BETA_TRANSIENT', 'wpaie_disable_beta_features' );
  * Models that support server-side refusal fallbacks (fallbacks: "default").
  */
 function wpaie_model_supports_fallbacks( string $model ): bool {
-	return in_array( $model, [ 'claude-opus-5-5', 'claude-sonnet-5-5' ], true );
+	return in_array( $model, [ 'claude-fable-5-2', 'claude-opus-5-5', 'claude-sonnet-5-5' ], true );
+}
+
+function wpaie_is_fable( string $model ): bool {
+	return str_starts_with( $model, 'claude-fable-' ) || str_starts_with( $model, 'claude-mythos-' );
+}
+
+/**
+ * Seconds to wait for one Messages API call with this model.
+ */
+function wpaie_http_timeout( string $model ): int {
+	return wpaie_is_fable( $model ) ? WPAIE_FABLE_HTTP_TIMEOUT : WPAIE_HTTP_TIMEOUT;
+}
+
+function wpaie_max_tokens( string $model ): int {
+	return wpaie_is_fable( $model ) ? WPAIE_FABLE_MAX_TOKENS : WPAIE_MAX_TOKENS;
 }
 
 /**
@@ -56,7 +75,7 @@ function wpaie_messages_create( string $api_key, string $model, string $effort, 
 function wpaie_send_messages_request( string $api_key, string $model, string $effort, string $system, array $messages, array $tools, bool $use_beta ) {
 	$payload = [
 		'model'         => $model,
-		'max_tokens'    => WPAIE_MAX_TOKENS,
+		'max_tokens'    => wpaie_max_tokens( $model ),
 		'system'        => $system,
 		'tools'         => $tools,
 		'messages'      => $messages,
@@ -88,7 +107,7 @@ function wpaie_send_messages_request( string $api_key, string $model, string $ef
 		}
 	}
 
-	return wpaie_api_request( 'POST', '/messages', $api_key, $payload, $betas, WPAIE_HTTP_TIMEOUT );
+	return wpaie_api_request( 'POST', '/messages', $api_key, $payload, $betas, wpaie_http_timeout( $model ) );
 }
 
 /**
@@ -215,7 +234,9 @@ function wpaie_api_error( int $status, $data, string $request_id = '' ): WP_Erro
 	$type = (string) wpaie_prop( wpaie_prop( $data, 'error' ), 'type', '' );
 	$raw  = (string) wpaie_prop( wpaie_prop( $data, 'error' ), 'message', '' );
 
-	if ( $raw !== '' && stripos( $raw, 'credit balance' ) !== false ) {
+	if ( $status === 400 && stripos( $raw, 'retention' ) !== false ) {
+		$message = __( 'This model requires 30-day data retention, which your Anthropic organization does not have (e.g. zero data retention). Choose another model in Settings.', 'wp-ai-editor' );
+	} elseif ( $raw !== '' && stripos( $raw, 'credit balance' ) !== false ) {
 		$message = __( 'Your Anthropic account is out of credit. Top it up in the Claude Console (Settings → Billing).', 'wp-ai-editor' );
 	} else {
 		$message = match ( true ) {

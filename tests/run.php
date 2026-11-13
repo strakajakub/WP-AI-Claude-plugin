@@ -171,6 +171,23 @@ test( 'agent step: haiku has no server-side fallbacks', function () {
 	check( ! isset( last_payload()['fallbacks'] ), 'no fallbacks for Haiku' );
 } );
 
+test( 'agent step: Fable 5.2 request shape', function () {
+	wpaie_test_queue_response( 200, api_message( [ [ 'type' => 'text', 'text' => 'ok' ] ] ) );
+	$state = wpaie_conversation_add_user_text( wpaie_empty_conversation(), 'hi' );
+	wpaie_agent_step( $state, [ 'model' => 'claude-fable-5-2', 'effort' => 'high' ], 'k' );
+	$p   = last_payload();
+	$req = $GLOBALS['wp_test']['requests'][0]['args'];
+	check( $p['model'] === 'claude-fable-5-2' && $p['thinking']['type'] === 'adaptive', 'adaptive thinking (no disabled/budget)' );
+	check( $p['fallbacks'] === 'default', 'refusal fallbacks enabled' );
+	check( $p['max_tokens'] === WPAIE_FABLE_MAX_TOKENS && $req['timeout'] === WPAIE_FABLE_HTTP_TIMEOUT, 'longer output room and timeout' );
+	check( ! isset( $p['tool_choice'] ) && ! isset( $p['temperature'] ), 'no forced tool choice / sampling params' );
+	check( isset( wpaie_models()['claude-fable-5-2'] ), 'offered in settings' );
+
+	wpaie_test_queue_response( 400, [ 'type' => 'error', 'error' => [ 'type' => 'invalid_request_error', 'message' => 'This model requires a 30-day data retention configuration.' ] ] );
+	$e = wpaie_api_request( 'POST', '/messages', 'k', [] );
+	check( str_contains( $e->get_error_message(), '30-day data retention' ), 'data retention error explained' );
+} );
+
 test( 'agent step: tool errors are flagged is_error', function () {
 	wpaie_test_queue_response( 200, api_message( [ [ 'type' => 'tool_use', 'id' => 't', 'name' => 'update_custom_css', 'input' => [ 'css' => '' ] ] ], 'tool_use' ) );
 	$state  = wpaie_conversation_add_user_text( wpaie_empty_conversation(), 'x' );

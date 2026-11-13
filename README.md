@@ -44,14 +44,25 @@ The constant takes precedence over a key saved in Settings.
 
 | Option | Default | Description |
 |---|---|---|
-| Model | Claude Opus 5.5 | Opus 5.5 (most capable), Sonnet 5.5 (faster, cheaper), Haiku 5.5 (fastest, cheapest) |
+| Model | Claude Opus 5.5 | Fable 5.2 (most capable; slowest and most expensive), Opus 5.5 (best balance), Sonnet 5.5 (faster, cheaper), Haiku 5.5 (fastest, cheapest) |
 | Thinking effort | Medium | Low / Medium / High / Extra high. Higher effort is more careful but slower and more expensive. |
 
-You can add models with a filter:
+### Claude Fable 5.2
+
+Fable 5.2 is Anthropic's most capable model, for the hardest tasks. Before choosing it, keep in mind:
+
+- **Price:** $8 / $40 per million input / output tokens, about twice as much as Opus 5.5.
+- **Speed:** one answer can take several minutes. The plugin waits up to 600 s for it (240 s for other models) and gives it more room for output. If your hosting cuts requests off sooner (nginx/proxy limits), you will see a 502/504 error. Raise the limit, or use Opus 5.5.
+- **Thinking effort:** start with High.
+- **Data retention:** your Anthropic organization must have 30-day data retention. Organizations with zero data retention get an error.
+
+### Adding models
+
+You can add other models with a filter:
 
 ```php
 add_filter( 'wpaie_models', function ( $models ) {
-	$models['claude-fable-5-2'] = 'Claude Fable 5.2';
+	$models['claude-sonnet-5'] = 'Claude Sonnet 5';
 	return $models;
 } );
 ```
@@ -62,7 +73,7 @@ add_filter( 'wpaie_models', function ( $models ) {
 - **Adaptive thinking** (always on for Opus 5.5). The *Thinking effort* setting (`output_config.effort`) controls how deep it goes.
 - **One step per request:** each AJAX request runs one model call plus any tools, and then the browser asks for the next step. No single request has to survive the whole agent loop, so hosting time limits are not hit. Tool calls are shown live as they happen. A message gets at most 15 steps.
 - **History** is stored per user (user meta `wpaie_history`) and is only ever appended to. The system prompt is frozen when the conversation starts. This matters because Opus 5.5 binds its thinking blocks to the exact earlier conversation: editing earlier messages invalidates them, and for new accounts the API then returns a 400 error. Old tool results are therefore cleared on the API side (`context_management`). The local history is shrunk only between messages, and only when it grows past 400 kB.
-- **Optional beta features:** server-side clearing of old tool results, `drop_block` for invalid thinking blocks, and an automatic **fallback to another model** when a safety filter declines a request (Opus and Sonnet). If the API rejects them, the plugin switches to running without them for a day and carries on.
+- **Optional beta features:** server-side clearing of old tool results, `drop_block` for invalid thinking blocks, and an automatic **fallback to another model** when a safety filter declines a request (Fable, Opus and Sonnet). If the API rejects them, the plugin switches to running without them for a day and carries on.
 - **Prompt caching** (`cache_control`) makes resending the history between steps cheaper.
 
 ## Error messages and troubleshooting
@@ -79,6 +90,7 @@ Errors are shown right in the chat, with the HTTP status and the `request-id` so
 | This page has expired | Reload the page (F5). |
 | A previous request is still running | The chat is open in another tab. Wait for it to finish. |
 | The model declined this request (safety filter) | Rephrase the request or choose another model. |
+| This model requires 30-day data retention | Your organization uses zero data retention, so Fable 5.2 is not available. Choose Opus 5.5. |
 
 If an error happens in the middle of a task, the changes from earlier steps stay saved. Write "continue" and the assistant picks up where it left off.
 

@@ -23,7 +23,7 @@ define( 'WPAIE_MAX_STEPS', 15 );
  */
 function wpaie_agent_step( array &$state, array $settings, string $api_key ) {
 	if ( function_exists( 'set_time_limit' ) ) {
-		@set_time_limit( WPAIE_HTTP_TIMEOUT + 60 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+		@set_time_limit( wpaie_http_timeout( $settings['model'] ) + 60 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
 	}
 
 	if ( $state['steps'] >= WPAIE_MAX_STEPS ) {

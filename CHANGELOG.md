@@ -4,11 +4,11 @@
 
 ### API and models
 - Claude API `anthropic-version: 2026-10-21`.
-- Models Claude Opus 5.5 (default), Sonnet 5.5 and Haiku 5.5. Saved retired models (e.g. `claude-opus-4-8`) are moved to the default automatically.
+- Models Claude Fable 5.2, Opus 5.5 (default), Sonnet 5.5 and Haiku 5.5. Fable 5.2 gets a 600 s timeout, 32,000 output tokens, refusal fallbacks and a clear error when the organization lacks 30-day data retention. Saved retired models (e.g. `claude-opus-4-8`) are moved to the default automatically.
 - Adaptive thinking and a new *Thinking effort* setting (`output_config.effort`). `max_tokens` raised to 16,000 to leave room for thinking.
 - History compatible with preserved thinking: append-only, a system prompt frozen for the whole conversation, and old tool results cleared on the API side. Local compaction happens only between messages and removes thinking blocks first.
 - `drop_block` and a one-time recovery when a thinking block is invalid.
-- Automatic fallback to another model when a safety filter declines (Opus, Sonnet), plus a clear message when a request is declined.
+- Automatic fallback to another model when a safety filter declines (Fable, Opus, Sonnet), plus a clear message when a request is declined.
 - Prompt caching.
 - Tool errors are returned to the model with `is_error: true`.
 

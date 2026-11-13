@@ -192,6 +192,7 @@ function wpaie_render_settings_page(): void {
 								<option value="<?php echo esc_attr( $id ); ?>" <?php selected( $settings['model'], $id ); ?>><?php echo esc_html( $label ); ?></option>
 							<?php endforeach; ?>
 						</select>
+						<p class="description"><?php esc_html_e( 'Claude Fable 5.2 costs about twice as much as Opus 5.5 and one answer can take several minutes; it requires 30-day data retention on your Anthropic organization (not available with zero data retention).', 'wp-ai-editor' ); ?></p>
 					</td>
 				</tr>
 				<tr>
@@ -203,6 +204,7 @@ function wpaie_render_settings_page(): void {
 							<?php endforeach; ?>
 						</select>
 						<p class="description"><?php esc_html_e( 'Higher effort means more careful work, but longer waits and higher cost.', 'wp-ai-editor' ); ?></p>
+						<p class="description"><?php esc_html_e( 'With Claude Fable 5.2, start with High.', 'wp-ai-editor' ); ?></p>
 					</td>
 				</tr>
 			</table>

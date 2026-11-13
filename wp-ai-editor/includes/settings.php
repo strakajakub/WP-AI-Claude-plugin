@@ -17,7 +17,8 @@ function wpaie_models(): array {
 	return (array) apply_filters(
 		'wpaie_models',
 		[
-			'claude-opus-5-5'   => __( 'Claude Opus 5.5 — most capable (recommended)', 'wp-ai-editor' ),
+			'claude-fable-5-2'  => __( 'Claude Fable 5.2 — most capable; slowest and most expensive', 'wp-ai-editor' ),
+			'claude-opus-5-5'   => __( 'Claude Opus 5.5 — best balance (recommended)', 'wp-ai-editor' ),
 			'claude-sonnet-5-5' => __( 'Claude Sonnet 5.5 — faster and cheaper', 'wp-ai-editor' ),
 			'claude-haiku-5-5'  => __( 'Claude Haiku 5.5 — fastest and cheapest', 'wp-ai-editor' ),
 		]
