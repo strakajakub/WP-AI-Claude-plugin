@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.0.2
+
+Fixes from a review of the whole plugin:
+- **Undo order:** a change can only be undone when no newer, not yet undone change touched the same thing (post, CSS, global styles, option, meta, menu item, product). Before, undoing an older change silently wiped newer ones and undoing those later brought the reverted state back.
+- **Budget:** every model is priced, including the ones server-side fallbacks route declined requests to (Opus 5, Opus 4.8, Sonnet 5, Fable 5.1, Haiku 4.5). An unknown model is costed at the most expensive known price instead of $0, so it cannot slip past the monthly budget.
+- **Menus:** renaming an item with the wrong menu ID is refused instead of moving the item to that menu.
+- **Images:** files uploaded to the Files API for a message whose step fails are deleted again instead of being left behind.
+- **Lock:** the per-user lock covers the worst case of one step (two model calls and retries), and a request saves the conversation only while it still holds the lock, so two requests can no longer overwrite each other's history.
+- **Search & replace:** case-insensitive replacing understands diacritics ("Účet" / "účet"); the 100-post limit counts real matches, not database candidates.
+- PHP upload errors (e.g. `upload_max_filesize`) are reported as such, not as a wrong image type.
+- The admin bar sends the correct page URL on sites installed in a subdirectory.
+- Undoing "Created …" works when the post was already trashed by hand.
+- One shared retry policy for streaming and normal API requests.
+
 ## 3.0.1
 
 Fixes from a code review:

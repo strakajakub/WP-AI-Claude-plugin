@@ -33,6 +33,24 @@ function wpaie_ajax_upload_image(): void {
 	if ( ! is_array( $files ) || empty( $files['name'][0] ) ) {
 		wpaie_ajax_fail( __( 'No image was received.', 'wp-ai-editor' ), 'no_file' );
 	}
+	$upload_error = (int) ( $files['error'][0] ?? UPLOAD_ERR_NO_FILE );
+	if ( in_array( $upload_error, [ UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE ], true ) ) {
+		wpaie_ajax_fail(
+			sprintf(
+				/* translators: %s: maximum upload size, e.g. "2 MB" */
+				__( 'The image is larger than this server allows (max. %s). Use a smaller image or ask your host to raise upload_max_filesize.', 'wp-ai-editor' ),
+				size_format( wp_max_upload_size() )
+			),
+			'size'
+		);
+	}
+	if ( $upload_error !== UPLOAD_ERR_OK ) {
+		wpaie_ajax_fail(
+			/* translators: %d: PHP upload error code */
+			sprintf( __( 'The image upload failed on the server (PHP upload error %d).', 'wp-ai-editor' ), $upload_error ),
+			'upload'
+		);
+	}
 	$_FILES['wpaie_image'] = [
 		'name'     => $files['name'][0],
 		'type'     => $files['type'][0],

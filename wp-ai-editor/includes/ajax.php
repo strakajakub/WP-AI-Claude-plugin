@@ -64,18 +64,55 @@ function wpaie_require_api_key(): string {
 
 /**
  * Per-user lock so two tabs (or a double click) cannot run the agent on the same history at once.
+ *
+ * The lock holds a random token. It lives long enough for the worst case of one step (two full
+ * model calls – a retry after a rejected beta feature or thinking block – plus retry pauses and
+ * tool execution), and before saving we check the token is still ours: if the lock expired and
+ * another request took over, this request must not overwrite that request's history.
  */
 function wpaie_acquire_lock(): void {
 	$key = 'wpaie_lock_' . get_current_user_id();
 	if ( get_transient( $key ) ) {
 		wpaie_ajax_fail( __( 'A previous request is still running (maybe in another tab). Please wait for it to finish.', 'wp-ai-editor' ), 'locked' );
 	}
-	set_transient( $key, time(), wpaie_http_timeout( wpaie_get_settings()['model'] ) + 120 );
+	$GLOBALS['wpaie_lock_token'] = bin2hex( random_bytes( 8 ) );
+	set_transient( $key, $GLOBALS['wpaie_lock_token'], 2 * wpaie_http_timeout( wpaie_get_settings()['model'] ) + 180 );
 	register_shutdown_function( 'wpaie_release_lock' );
 }
 
+function wpaie_lock_still_held(): bool {
+	return ! empty( $GLOBALS['wpaie_lock_token'] ) && get_transient( 'wpaie_lock_' . get_current_user_id() ) === $GLOBALS['wpaie_lock_token'];
+}
+
 function wpaie_release_lock(): void {
-	delete_transient( 'wpaie_lock_' . get_current_user_id() );
+	// Never remove a lock that another request holds by now.
+	if ( wpaie_lock_still_held() ) {
+		delete_transient( 'wpaie_lock_' . get_current_user_id() );
+	}
+	$GLOBALS['wpaie_lock_token'] = '';
+}
+
+/**
+ * Save the conversation only while this request still holds the lock.
+ */
+function wpaie_save_locked( array $state ): void {
+	if ( ! wpaie_lock_still_held() ) {
+		wpaie_log( 'Lock lost before saving; the conversation was not saved.', [ 'conversation' => $state['id'] ] );
+		wpaie_ajax_fail( __( 'This request took too long and another request continued the conversation meanwhile, so its result was not saved. Reload the page to see the current state.', 'wp-ai-editor' ), 'lock_lost' );
+	}
+	if ( ! wpaie_conversation_save( $state ) ) {
+		wpaie_log( 'Saving the conversation failed.' );
+	}
+}
+
+/**
+ * Delete images uploaded to the Files API during this request when the conversation will not be
+ * saved (e.g. the model call failed), so they are not left behind in the Files storage.
+ */
+function wpaie_discard_new_files( array $state, array $files_before, string $api_key ): void {
+	foreach ( array_diff_key( $state['files'], $files_before ) as $file_id ) {
+		wpaie_files_delete( $api_key, (string) $file_id );
+	}
 }
 
 function wpaie_request_conversation_id(): string {
@@ -98,9 +135,7 @@ function wpaie_progress_emitter(): ?callable {
  * Persist the state and send the step result to the browser.
  */
 function wpaie_send_step_result( array $state, array $result ): void {
-	if ( ! wpaie_conversation_save( $state ) ) {
-		wpaie_log( 'Saving the conversation failed.' );
-	}
+	wpaie_save_locked( $state );
 	wpaie_set_active_conversation( $state['id'] );
 
 	wpaie_ajax_success(
@@ -153,8 +188,10 @@ function wpaie_ajax_chat(): void {
 		$state['system'] = wpaie_system_prompt( $state['tools'] ?: wpaie_available_tool_names() );
 	}
 
-	$extra = function_exists( 'wpaie_request_extra_blocks' ) ? wpaie_request_extra_blocks( $state, $api_key ) : [];
+	$files_before = $state['files'];
+	$extra        = function_exists( 'wpaie_request_extra_blocks' ) ? wpaie_request_extra_blocks( $state, $api_key ) : [];
 	if ( is_wp_error( $extra ) ) {
+		wpaie_discard_new_files( $state, $files_before, $api_key );
 		wpaie_ajax_fail( $extra->get_error_message(), $extra->get_error_code() );
 	}
 
@@ -164,13 +201,17 @@ function wpaie_ajax_chat(): void {
 	$state = wpaie_conversation_add_user_text( $state, $message, $extra );
 	if ( $skipped ) {
 		// Tools of the skipped turn may have run already – keep that in the history.
-		wpaie_conversation_save( $state );
+		wpaie_save_locked( $state );
 	}
 
 	$emit   = wpaie_progress_emitter();
 	$result = wpaie_agent_step( $state, wpaie_get_settings(), $api_key, $emit );
 	if ( is_wp_error( $result ) ) {
 		// Nothing ran yet: keep the last good state, the user can simply resend the message.
+		// (If the state was saved above, the uploaded images belong to it and stay.)
+		if ( ! $skipped ) {
+			wpaie_discard_new_files( $state, $files_before, $api_key );
+		}
 		wpaie_ajax_fail( $result->get_error_message(), $result->get_error_code() );
 	}
 	wpaie_send_step_result( $state, $result );

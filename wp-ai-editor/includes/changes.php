@@ -159,6 +159,21 @@ function wpaie_undo_change( int $id ) {
 		return new WP_Error( 'wpaie_undo', __( 'The undo data for this change is damaged.', 'wp-ai-editor' ) );
 	}
 
+	// Undo restores a snapshot. If a newer change touched the same thing, restoring this snapshot
+	// would silently wipe it (and undoing that one later would bring this change back), so the
+	// newer changes have to be undone first.
+	$newer = wpaie_newer_changes_to_same_targets( $change, $ops );
+	if ( $newer ) {
+		return new WP_Error(
+			'wpaie_undo_order',
+			sprintf(
+				/* translators: %s: list of change descriptions */
+				__( 'A newer change touched the same thing. Undo it first: %s', 'wp-ai-editor' ),
+				implode( ', ', array_map( fn( $c ) => '"' . $c->label . '"', $newer ) )
+			)
+		);
+	}
+
 	foreach ( array_reverse( $ops ) as $op ) {
 		$result = wpaie_apply_undo_op( (array) $op );
 		if ( is_wp_error( $result ) ) {
@@ -182,6 +197,68 @@ function wpaie_undo_change( int $id ) {
 		[ '%d' ]
 	);
 	return true;
+}
+
+/**
+ * What an undo operation restores, as comparable keys (e.g. "post:12", "css", "meta:5:_thumbnail_id").
+ *
+ * @return string[]
+ */
+function wpaie_undo_op_targets( array $op ): array {
+	$id = (int) ( $op['post_id'] ?? 0 );
+	switch ( (string) ( $op['type'] ?? '' ) ) {
+		case 'post_fields':
+		case 'trash_post':
+		case 'delete_post':
+			return [ "post:$id" ];
+		case 'theme_json':
+			return [ 'theme_json' ];
+		case 'custom_css':
+			return [ 'css' ];
+		case 'options':
+			return array_map( fn( $name ) => "option:$name", array_keys( (array) ( $op['values'] ?? [] ) ) );
+		case 'theme_mods':
+			return array_map( fn( $name ) => "mod:$name", array_keys( (array) ( $op['values'] ?? [] ) ) );
+		case 'post_meta':
+			return array_map( fn( $key ) => "meta:$id:$key", array_keys( (array) ( $op['values'] ?? [] ) ) );
+		case 'terms':
+			return [ "terms:$id:" . (string) ( $op['taxonomy'] ?? '' ) ];
+		case 'menu_item':
+			return [ 'post:' . (int) ( $op['item_id'] ?? 0 ) ];
+		case 'wc_product':
+			return [ 'wc:' . (int) ( $op['product_id'] ?? 0 ) ];
+	}
+	return [];
+}
+
+/**
+ * Newer changes that are not undone yet and touch something this change would restore.
+ *
+ * @return object[]
+ */
+function wpaie_newer_changes_to_same_targets( object $change, array $ops ): array {
+	global $wpdb;
+
+	$targets = [];
+	foreach ( $ops as $op ) {
+		$targets = array_merge( $targets, wpaie_undo_op_targets( (array) $op ) );
+	}
+	if ( ! $targets ) {
+		return [];
+	}
+
+	$table = wpaie_changes_table();
+	$rows  = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $table WHERE id > %d AND reverted_at IS NULL ORDER BY id DESC LIMIT 500", (int) $change->id ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+	$newer = [];
+	foreach ( (array) $rows as $row ) {
+		foreach ( (array) json_decode( (string) $row->undo, true ) as $op ) {
+			if ( array_intersect( $targets, wpaie_undo_op_targets( (array) $op ) ) ) {
+				$newer[] = $row;
+				break;
+			}
+		}
+	}
+	return $newer;
 }
 
 /**
@@ -213,7 +290,11 @@ function wpaie_apply_undo_op( array $op ) {
 			return true;
 
 		case 'trash_post':
-			return wp_trash_post( (int) $op['post_id'] ) ? true : new WP_Error( 'wpaie_undo', 'Could not move the post to the trash.' );
+			$post = get_post( (int) $op['post_id'] );
+			if ( ! $post || $post->post_status === 'trash' ) {
+				return true; // Already trashed or deleted by hand – nothing left to undo.
+			}
+			return wp_trash_post( $post->ID ) ? true : new WP_Error( 'wpaie_undo', 'Could not move the post to the trash.' );
 
 		case 'delete_post':
 			$post = get_post( (int) $op['post_id'] );

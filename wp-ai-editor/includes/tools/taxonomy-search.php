@@ -8,6 +8,9 @@ defined( 'ABSPATH' ) || exit;
 /** Posts changed by one replace_in_content call. */
 define( 'WPAIE_MAX_REPLACE_POSTS', 100 );
 
+/** Posts examined by one replace_in_content call (SQL candidates, before exact matching). */
+define( 'WPAIE_MAX_REPLACE_CANDIDATES', 1000 );
+
 const WPAIE_TAXONOMIES = [ 'category', 'post_tag' ];
 
 function wpaie_taxonomy_search_tools(): array {
@@ -254,10 +257,12 @@ function wpaie_plan_replacement( array $in ) {
 		$posts = array_values( array_filter( array_map( 'get_post', array_map( 'intval', (array) $in['post_ids'] ) ) ) );
 		$posts = array_filter( $posts, fn( $p ) => in_array( $p->post_type, [ 'post', 'page' ], true ) );
 	} else {
-		$posts = wpaie_find_posts_containing( $search, WPAIE_MAX_REPLACE_POSTS + 1 );
-	}
-	if ( count( $posts ) > WPAIE_MAX_REPLACE_POSTS ) {
-		return wpaie_tool_error( 'More than ' . WPAIE_MAX_REPLACE_POSTS . ' posts match; pass post_ids to do it in batches.' );
+		// SQL LIKE is case- (and often accent-) insensitive, so these are only candidates;
+		// the exact matching below decides which posts really change.
+		$posts = wpaie_find_posts_containing( $search, WPAIE_MAX_REPLACE_CANDIDATES + 1 );
+		if ( count( $posts ) > WPAIE_MAX_REPLACE_CANDIDATES ) {
+			return wpaie_tool_error( 'The text appears in too many posts; pass post_ids to do it in batches.' );
+		}
 	}
 
 	$plan = [];
@@ -266,11 +271,11 @@ function wpaie_plan_replacement( array $in ) {
 			continue;
 		}
 		$count   = 0;
-		$content = $case ? str_replace( $search, $replace, $post->post_content, $count ) : str_ireplace( $search, $replace, $post->post_content, $count );
+		$content = wpaie_replace_text( $search, $replace, $post->post_content, $case, $count );
 		$title   = $post->post_title;
 		if ( $titles ) {
-			$n     = 0;
-			$title = $case ? str_replace( $search, $replace, $title, $n ) : str_ireplace( $search, $replace, $title, $n );
+			$n      = 0;
+			$title  = wpaie_replace_text( $search, $replace, $title, $case, $n );
 			$count += $n;
 		}
 		if ( $count > 0 ) {
@@ -282,7 +287,25 @@ function wpaie_plan_replacement( array $in ) {
 			];
 		}
 	}
+	if ( count( $plan ) > WPAIE_MAX_REPLACE_POSTS ) {
+		return wpaie_tool_error( count( $plan ) . ' posts contain the text, more than ' . WPAIE_MAX_REPLACE_POSTS . ' per call; pass post_ids to do it in batches.' );
+	}
 	return $plan;
+}
+
+/**
+ * Replace text; case-insensitive matching is Unicode-aware (str_ireplace only folds ASCII,
+ * so it would not match "Účet" with "účet"). The replacement is inserted literally.
+ */
+function wpaie_replace_text( string $search, string $replace, string $subject, bool $case_sensitive, int &$count ): string {
+	if ( $case_sensitive ) {
+		return str_replace( $search, $replace, $subject, $count );
+	}
+	$result = preg_replace_callback( '/' . preg_quote( $search, '/' ) . '/iu', fn() => $replace, $subject, -1, $count );
+	if ( $result === null ) { // Invalid UTF-8 in the subject: fall back to the ASCII-only variant.
+		return str_ireplace( $search, $replace, $subject, $count );
+	}
+	return $result;
 }
 
 function wpaie_preview_replace_in_content( array $in ): string {

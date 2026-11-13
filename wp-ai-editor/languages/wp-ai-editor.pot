@@ -354,7 +354,7 @@ msgstr ""
 msgid "Test connection"
 msgstr ""
 
-#: wp-ai-editor/includes/agent.php:42 wp-ai-editor/includes/ajax.php:189
+#: wp-ai-editor/includes/agent.php:42 wp-ai-editor/includes/ajax.php:230
 msgid "Please approve or reject the proposed change first."
 msgstr ""
 
@@ -402,33 +402,37 @@ msgstr ""
 msgid "The Anthropic API key is missing. Set it in AI Editor → Settings."
 msgstr ""
 
-#: wp-ai-editor/includes/ajax.php:71
+#: wp-ai-editor/includes/ajax.php:76
 msgid "A previous request is still running (maybe in another tab). Please wait for it to finish."
 msgstr ""
 
-#: wp-ai-editor/includes/ajax.php:132
+#: wp-ai-editor/includes/ajax.php:101
+msgid "This request took too long and another request continued the conversation meanwhile, so its result was not saved. Reload the page to see the current state."
+msgstr ""
+
+#: wp-ai-editor/includes/ajax.php:167
 msgid "The message is empty."
 msgstr ""
 
 #. translators: %d: maximum number of characters
-#: wp-ai-editor/includes/ajax.php:138
+#: wp-ai-editor/includes/ajax.php:173
 #, php-format
 msgid "The message is too long (max. %d characters). Please split it into smaller parts."
 msgstr ""
 
-#: wp-ai-editor/includes/ajax.php:192
+#: wp-ai-editor/includes/ajax.php:233
 msgid "There is nothing to continue – send a new message."
 msgstr ""
 
-#: wp-ai-editor/includes/ajax.php:200
+#: wp-ai-editor/includes/ajax.php:241
 msgid "Changes made in the previous steps are saved – write \"continue\" to finish the task."
 msgstr ""
 
-#: wp-ai-editor/includes/ajax.php:235
+#: wp-ai-editor/includes/ajax.php:276
 msgid "The change was undone."
 msgstr ""
 
-#: wp-ai-editor/includes/ajax.php:250
+#: wp-ai-editor/includes/ajax.php:291
 msgid "This conversation no longer exists."
 msgstr ""
 
@@ -441,86 +445,86 @@ msgid "The Anthropic API returned an invalid (non-JSON) response. Please try aga
 msgstr ""
 
 #. translators: %d: timeout in seconds
-#: wp-ai-editor/includes/api.php:229
+#: wp-ai-editor/includes/api.php:252
 #, php-format
 msgid "The Anthropic API did not respond within %d s. Split the request into smaller steps, lower the \"Thinking effort\" in Settings, or choose a faster model."
 msgstr ""
 
-#: wp-ai-editor/includes/api.php:236
+#: wp-ai-editor/includes/api.php:259
 msgid "The server cannot resolve api.anthropic.com (DNS). Check that the server can reach the internet and that the hosting firewall allows it."
 msgstr ""
 
-#: wp-ai-editor/includes/api.php:239
+#: wp-ai-editor/includes/api.php:262
 msgid "Secure connection (SSL) to api.anthropic.com failed. The hosting probably has outdated CA certificates or OpenSSL. Details:"
 msgstr ""
 
-#: wp-ai-editor/includes/api.php:241
+#: wp-ai-editor/includes/api.php:264
 msgid "Could not connect to the Anthropic API:"
 msgstr ""
 
-#: wp-ai-editor/includes/api.php:252
+#: wp-ai-editor/includes/api.php:275
 msgid "An image in this conversation is no longer available (e.g. the API key was changed). Start a new chat."
 msgstr ""
 
-#: wp-ai-editor/includes/api.php:254
+#: wp-ai-editor/includes/api.php:277
 msgid "This model requires 30-day data retention, which your Anthropic organization does not have (e.g. zero data retention). Choose another model in Settings."
 msgstr ""
 
-#: wp-ai-editor/includes/api.php:256
+#: wp-ai-editor/includes/api.php:279
 msgid "Your Anthropic account is out of credit. Top it up in the Claude Console (Settings → Billing)."
 msgstr ""
 
-#: wp-ai-editor/includes/api.php:259
+#: wp-ai-editor/includes/api.php:282
 msgid "Invalid API key. Check it in AI Editor → Settings."
 msgstr ""
 
-#: wp-ai-editor/includes/api.php:260
+#: wp-ai-editor/includes/api.php:283
 msgid "Billing problem on your Anthropic account. Check your payment details in the Claude Console."
 msgstr ""
 
-#: wp-ai-editor/includes/api.php:261
+#: wp-ai-editor/includes/api.php:284
 msgid "The API key is not allowed to perform this action or to use the selected model."
 msgstr ""
 
-#: wp-ai-editor/includes/api.php:262
+#: wp-ai-editor/includes/api.php:285
 msgid "The selected model was not found or your account has no access to it. Choose another model in Settings."
 msgstr ""
 
-#: wp-ai-editor/includes/api.php:263
+#: wp-ai-editor/includes/api.php:286
 msgid "The conversation is too large for the API. Start a new chat (＋ at the top right)."
 msgstr ""
 
-#: wp-ai-editor/includes/api.php:264
+#: wp-ai-editor/includes/api.php:287
 msgid "Anthropic API rate limit exceeded. Wait a moment and try again."
 msgstr ""
 
-#: wp-ai-editor/includes/api.php:265
+#: wp-ai-editor/includes/api.php:288
 msgid "The Anthropic API is currently overloaded. Please try again in a moment."
 msgstr ""
 
-#: wp-ai-editor/includes/api.php:266
+#: wp-ai-editor/includes/api.php:289
 msgid "Temporary error on the Anthropic API side. Please try again."
 msgstr ""
 
-#: wp-ai-editor/includes/api.php:267
+#: wp-ai-editor/includes/api.php:290
 msgid "The Anthropic API rejected the request."
 msgstr ""
 
-#: wp-ai-editor/includes/api.php:295
+#: wp-ai-editor/includes/api.php:318
 msgid "No API key is set."
 msgstr ""
 
 #. translators: %s: model name
-#: wp-ai-editor/includes/api.php:304
+#: wp-ai-editor/includes/api.php:327
 #, php-format
 msgid "Connection works. The key is valid and the model \"%s\" is available."
 msgstr ""
 
-#: wp-ai-editor/includes/api.php:319
+#: wp-ai-editor/includes/api.php:342
 msgid "The image file could not be read on the server."
 msgstr ""
 
-#: wp-ai-editor/includes/api.php:344
+#: wp-ai-editor/includes/api.php:367
 msgid "The Files API did not return a file ID."
 msgstr ""
 
@@ -540,8 +544,14 @@ msgstr ""
 msgid "The undo data for this change is damaged."
 msgstr ""
 
+#. translators: %s: list of change descriptions
+#: wp-ai-editor/includes/changes.php:171
+#, php-format
+msgid "A newer change touched the same thing. Undo it first: %s"
+msgstr ""
+
 #. translators: %s: error message
-#: wp-ai-editor/includes/changes.php:169
+#: wp-ai-editor/includes/changes.php:184
 #, php-format
 msgid "Undo failed: %s"
 msgstr ""
@@ -554,32 +564,44 @@ msgstr ""
 msgid "No image was received."
 msgstr ""
 
-#: wp-ai-editor/includes/images.php:47
+#. translators: %s: maximum upload size, e.g. "2 MB"
+#: wp-ai-editor/includes/images.php:41
+#, php-format
+msgid "The image is larger than this server allows (max. %s). Use a smaller image or ask your host to raise upload_max_filesize."
+msgstr ""
+
+#. translators: %d: PHP upload error code
+#: wp-ai-editor/includes/images.php:50
+#, php-format
+msgid "The image upload failed on the server (PHP upload error %d)."
+msgstr ""
+
+#: wp-ai-editor/includes/images.php:65
 msgid "Only JPEG, PNG, GIF and WebP images can be attached."
 msgstr ""
 
-#: wp-ai-editor/includes/images.php:50
+#: wp-ai-editor/includes/images.php:68
 msgid "The image is too large (max. 5 MB)."
 msgstr ""
 
 #. translators: %s: error message
-#: wp-ai-editor/includes/images.php:61
+#: wp-ai-editor/includes/images.php:79
 #, php-format
 msgid "The image could not be saved: %s"
 msgstr ""
 
 #. translators: %d: maximum number of images
-#: wp-ai-editor/includes/images.php:155 wp-ai-editor/includes/integrations.php:93
+#: wp-ai-editor/includes/images.php:173 wp-ai-editor/includes/integrations.php:93
 #, php-format
 msgid "You can attach at most %d images to one message."
 msgstr ""
 
-#: wp-ai-editor/includes/images.php:161
+#: wp-ai-editor/includes/images.php:179
 msgid "You are not allowed to use one of the attached images."
 msgstr ""
 
 #. translators: %s: error message
-#: wp-ai-editor/includes/images.php:168
+#: wp-ai-editor/includes/images.php:186
 #, php-format
 msgid "The image could not be sent to the AI: %s"
 msgstr ""
@@ -632,48 +654,48 @@ msgid "Ask the AI assistant about this page"
 msgstr ""
 
 #. translators: 1: spent amount in USD, 2: monthly budget in USD
-#: wp-ai-editor/includes/pricing.php:246
+#: wp-ai-editor/includes/pricing.php:292
 #, php-format
 msgid "The monthly budget is used up ($%1$s of $%2$s). An administrator can raise it in AI Editor → Settings; it resets at the start of the month (UTC)."
 msgstr ""
 
-#: wp-ai-editor/includes/pricing.php:265
+#: wp-ai-editor/includes/pricing.php:311
 msgid "Usage"
 msgstr ""
 
 #. translators: %s: amount in USD
-#: wp-ai-editor/includes/pricing.php:270
+#: wp-ai-editor/includes/pricing.php:316
 #, php-format
 msgid "Estimated spending this month: %s"
 msgstr ""
 
 #. translators: 1: budget in USD, 2: percentage used
-#: wp-ai-editor/includes/pricing.php:277
+#: wp-ai-editor/includes/pricing.php:323
 #, php-format
 msgid "of the %1$s budget (%2$s %%)."
 msgstr ""
 
-#: wp-ai-editor/includes/pricing.php:291
+#: wp-ai-editor/includes/pricing.php:337
 msgid "Month"
 msgstr ""
 
-#: wp-ai-editor/includes/pricing.php:292
+#: wp-ai-editor/includes/pricing.php:338
 msgid "Requests"
 msgstr ""
 
-#: wp-ai-editor/includes/pricing.php:293
+#: wp-ai-editor/includes/pricing.php:339
 msgid "Input tokens"
 msgstr ""
 
-#: wp-ai-editor/includes/pricing.php:294
+#: wp-ai-editor/includes/pricing.php:340
 msgid "Output tokens"
 msgstr ""
 
-#: wp-ai-editor/includes/pricing.php:295
+#: wp-ai-editor/includes/pricing.php:341
 msgid "Estimated cost"
 msgstr ""
 
-#: wp-ai-editor/includes/pricing.php:311
+#: wp-ai-editor/includes/pricing.php:357
 msgid "Estimate based on list prices; your bill in the Claude Console is authoritative."
 msgstr ""
 
@@ -729,7 +751,7 @@ msgstr ""
 msgid "The Anthropic API stream ended before any answer arrived. Please try again."
 msgstr ""
 
-#: wp-ai-editor/includes/stream.php:179 wp-ai-editor/includes/stream.php:272
+#: wp-ai-editor/includes/stream.php:179 wp-ai-editor/includes/stream.php:273
 msgid "The connection to the Anthropic API dropped in the middle of the answer. Please try again."
 msgstr ""
 
@@ -904,13 +926,13 @@ msgid "New item in %s"
 msgstr ""
 
 #. translators: 1: menu item label, 2: menu name
-#: wp-ai-editor/includes/tools/design.php:689
+#: wp-ai-editor/includes/tools/design.php:696
 #, php-format
 msgid "Menu item \"%1$s\" added to %2$s"
 msgstr ""
 
 #. translators: 1: old label, 2: new label
-#: wp-ai-editor/includes/tools/design.php:720
+#: wp-ai-editor/includes/tools/design.php:727
 #, php-format
 msgid "Menu item \"%1$s\" renamed to \"%2$s\""
 msgstr ""
@@ -997,50 +1019,50 @@ msgstr ""
 msgid "SEO of \"%s\" changed"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/taxonomy-search.php:26
+#: wp-ai-editor/includes/tools/taxonomy-search.php:29
 msgid "Loading tags…"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/taxonomy-search.php:26
+#: wp-ai-editor/includes/tools/taxonomy-search.php:29
 msgid "Loading categories…"
 msgstr ""
 
 #. translators: %d: post ID
-#: wp-ai-editor/includes/tools/taxonomy-search.php:45
+#: wp-ai-editor/includes/tools/taxonomy-search.php:48
 #, php-format
 msgid "Setting categories/tags of #%d…"
 msgstr ""
 
 #. translators: %s: searched text
-#: wp-ai-editor/includes/tools/taxonomy-search.php:61
+#: wp-ai-editor/includes/tools/taxonomy-search.php:64
 #, php-format
 msgid "Searching for \"%s\"…"
 msgstr ""
 
 #. translators: 1: searched text, 2: replacement
-#: wp-ai-editor/includes/tools/taxonomy-search.php:82
+#: wp-ai-editor/includes/tools/taxonomy-search.php:85
 #, php-format
 msgid "Replacing \"%1$s\" with \"%2$s\"…"
 msgstr ""
 
 #. translators: %s: post title
-#: wp-ai-editor/includes/tools/taxonomy-search.php:168
+#: wp-ai-editor/includes/tools/taxonomy-search.php:171
 #, php-format
 msgid "Categories of \"%s\" changed"
 msgstr ""
 
 #. translators: %s: post title
-#: wp-ai-editor/includes/tools/taxonomy-search.php:170
+#: wp-ai-editor/includes/tools/taxonomy-search.php:173
 #, php-format
 msgid "Tags of \"%s\" changed"
 msgstr ""
 
-#: wp-ai-editor/includes/tools/taxonomy-search.php:294
+#: wp-ai-editor/includes/tools/taxonomy-search.php:317
 msgid "No post contains the text, nothing would change."
 msgstr ""
 
 #. translators: %d: number of posts
-#: wp-ai-editor/includes/tools/taxonomy-search.php:299
+#: wp-ai-editor/includes/tools/taxonomy-search.php:322
 #, php-format
 msgid "%d post will change:"
 msgid_plural "%d posts will change:"
@@ -1048,7 +1070,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: 1: searched text, 2: replacement, 3: number of posts
-#: wp-ai-editor/includes/tools/taxonomy-search.php:354
+#: wp-ai-editor/includes/tools/taxonomy-search.php:377
 #, php-format
 msgid "\"%1$s\" → \"%2$s\" in %3$d posts"
 msgstr ""

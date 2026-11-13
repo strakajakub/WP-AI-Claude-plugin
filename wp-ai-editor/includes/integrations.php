@@ -183,7 +183,7 @@ add_action(
 			if ( is_singular() ) {
 				$args['context_post'] = get_queried_object_id();
 			}
-			$args['context_url'] = rawurlencode( home_url( add_query_arg( [] ) ) );
+			$args['context_url'] = rawurlencode( wpaie_current_front_url() );
 		}
 		$bar->add_node(
 			[
@@ -196,3 +196,22 @@ add_action(
 	},
 	100
 );
+
+/**
+ * URL of the front-end page being viewed.
+ *
+ * REQUEST_URI already contains the site's subdirectory (e.g. /blog/about/), so it is combined
+ * with the scheme and host only – home_url() would add the subdirectory a second time.
+ */
+function wpaie_current_front_url(): string {
+	if ( is_singular() ) {
+		$permalink = get_permalink( get_queried_object_id() );
+		if ( $permalink ) {
+			return $permalink;
+		}
+	}
+	$home = wp_parse_url( home_url() );
+	$uri  = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '/'; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized by esc_url_raw() below.
+	$url  = ( $home['scheme'] ?? 'https' ) . '://' . ( $home['host'] ?? '' ) . ( isset( $home['port'] ) ? ':' . $home['port'] : '' ) . '/' . ltrim( (string) $uri, '/' );
+	return esc_url_raw( $url );
+}

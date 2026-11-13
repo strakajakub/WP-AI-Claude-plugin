@@ -432,7 +432,7 @@ test( 'pricing: cost estimate, iterations, long-context tier', function () {
 	check( abs( wpaie_usage_cost( 'claude-opus-5-5', $usage ) - 6.0 ) < 1e-9, 'Opus 5.5: $4 in + $2 out' );
 	check( abs( wpaie_usage_cost( 'claude-opus-5-5', [ 'cache_creation_input_tokens' => 1000000, 'cache_read_input_tokens' => 1000000 ] ) - 5.2 ) < 1e-9, 'cache write 1.25x, cache read price' );
 	check( abs( wpaie_usage_cost( 'claude-haiku-5-5', [ 'input_tokens' => 200000 ] ) - 0.1 ) < 1e-9, 'Haiku long-context input price' );
-	check( wpaie_usage_cost( 'unknown-model', $usage ) === 0.0, 'unknown model costs 0' );
+	check( wpaie_usage_cost( 'unknown-model', $usage ) > 0, 'unknown model is not free' );
 
 	$resp = json_decode( json_encode( [ 'model' => 'claude-opus-5', 'usage' => [ 'input_tokens' => 5, 'output_tokens' => 5, 'iterations' => [
 		[ 'type' => 'message', 'model' => 'claude-opus-5-5', 'input_tokens' => 1000000, 'output_tokens' => 0 ],
@@ -741,6 +741,90 @@ test( 'review fix: the system prompt describes only the tools of the conversatio
 	$editor = wpaie_system_prompt( wpaie_available_tool_names() );
 	check( ! str_contains( $editor, 'global styles (theme.json' ) && ! str_contains( $editor, 'History page' ), 'editor: no design tools, no History page' );
 	check( str_contains( $editor, 'not an administrator' ) && str_contains( $editor, 'search & replace' ), 'editor: told to ask an administrator; content abilities listed' );
+} );
+
+test( 'review 2 fix: undo order – an older change cannot wipe a newer one', function () {
+	WPAIE_Run_Context::$changes = [];
+	wpaie_run_tool( 'update_custom_css', [ 'css' => 'A{}' ] );
+	wpaie_run_tool( 'update_custom_css', [ 'css' => 'B{}' ] );
+	[ $first, $second ] = WPAIE_Run_Context::$changes;
+
+	$blocked = wpaie_undo_change( $first['id'] );
+	check( is_wp_error( $blocked ) && $blocked->get_error_code() === 'wpaie_undo_order', 'older undo blocked while a newer change to the CSS exists' );
+	check( $GLOBALS['wp_test']['custom_css'] === "A{}\n\nB{}", 'CSS untouched by the blocked undo' );
+
+	check( wpaie_undo_change( $second['id'] ) === true && $GLOBALS['wp_test']['custom_css'] === 'A{}', 'newest undone first' );
+	check( wpaie_undo_change( $first['id'] ) === true && $GLOBALS['wp_test']['custom_css'] === '', 'then the older one' );
+
+	// Changes to different things do not block each other.
+	wpaie_test_add_post( [ 'ID' => 21, 'post_title' => 'A', 'post_content' => 'a' ] );
+	wpaie_test_add_post( [ 'ID' => 22, 'post_title' => 'B', 'post_content' => 'b' ] );
+	WPAIE_Run_Context::$changes = [];
+	wpaie_run_tool( 'update_post_content', [ 'post_id' => 21, 'content' => 'a2' ] );
+	wpaie_run_tool( 'update_post_content', [ 'post_id' => 22, 'content' => 'b2' ] );
+	check( wpaie_undo_change( WPAIE_Run_Context::$changes[0]['id'] ) === true && get_post( 21 )->post_content === 'a', 'independent older change can be undone' );
+} );
+
+test( 'review 2 fix: undoing a created post that was already trashed by hand succeeds', function () {
+	wpaie_test_add_post( [ 'ID' => 31, 'post_status' => 'trash', 'post_title' => 'X' ] );
+	check( wpaie_apply_undo_op( [ 'type' => 'trash_post', 'post_id' => 31 ] ) === true, 'already in trash' );
+	check( wpaie_apply_undo_op( [ 'type' => 'trash_post', 'post_id' => 999 ] ) === true, 'already deleted' );
+} );
+
+test( 'review 2 fix: no model is free – fallback and unknown models are priced', function () {
+	$usage = [ 'input_tokens' => 1000000, 'output_tokens' => 100000 ];
+	check( abs( wpaie_usage_cost( 'claude-opus-4-8', $usage ) - 7.5 ) < 1e-9, 'fallback model Opus 4.8 priced' );
+	check( abs( wpaie_usage_cost( 'claude-sonnet-5', $usage ) - 3.0 ) < 1e-9, 'fallback model Sonnet 5 priced' );
+	check( wpaie_usage_cost( 'claude-future-9', $usage ) >= wpaie_usage_cost( 'claude-fable-5-2', $usage ), 'unknown model costed at the most expensive known price' );
+} );
+
+function is_object_in_term( $object_id, $taxonomy, $term ) { return (int) $term === 5; }
+function wp_get_object_terms( $object_id, $taxonomy, $args = [] ) { return [ 5 ]; }
+
+test( 'review 2 fix: renaming a menu item with the wrong menu ID is refused', function () {
+	wpaie_test_add_post( [ 'ID' => 57, 'post_type' => 'nav_menu_item', 'post_title' => 'Blog' ] );
+	$err = wpaie_rename_menu_item( 3, 57, 'Články' );
+	check( is_wp_error( $err ) && str_contains( $err->get_error_message(), 'is in menu #5' ), 'refused, model told the right menu' );
+} );
+
+test( 'review 2 fix: case-insensitive replace understands diacritics; limit counts real matches', function () {
+	$n   = 0;
+	$out = wpaie_replace_text( 'účet', 'konto', 'Účet, ÚČET a účet', false, $n );
+	check( $n === 3 && $out === 'konto, konto a konto', 'Unicode case folding' );
+	$out = wpaie_replace_text( 'a.b', '$1 \\0', 'A.B axb', false, $n );
+	check( $n === 1 && $out === '$1 \\0 axb', 'search is literal, replacement inserted literally' );
+
+	for ( $i = 100; $i < 230; $i++ ) {
+		wpaie_test_add_post( [ 'ID' => $i, 'post_status' => 'publish', 'post_title' => "P$i", 'post_content' => $i < 103 ? 'Firma ACME' : 'firma acme' ] );
+	}
+	$plan = wpaie_plan_replacement( [ 'search' => 'ACME', 'replace' => 'Acme' ] );
+	check( is_array( $plan ) && count( $plan ) === 3, '130 LIKE candidates, 3 exact matches – not refused' );
+	$plan = wpaie_plan_replacement( [ 'search' => 'acme', 'replace' => 'Acme', 'case_sensitive' => false ] );
+	check( is_wp_error( $plan ) && str_contains( $plan->get_error_message(), '130 posts' ), 'over 100 real matches refused' );
+} );
+
+test( 'review 2 fix: shared retry policy', function () {
+	check( wpaie_retry_delay( 529, '1', 1 ) === 1 && wpaie_retry_delay( 429, '', 2 ) === 4, 'retryable statuses wait (retry-after or backoff)' );
+	check( wpaie_retry_delay( 400, '', 1 ) === null && wpaie_retry_delay( 529, '1', WPAIE_MAX_ATTEMPTS ) === null, 'no retry for 400 or after the last attempt' );
+	check( wpaie_retry_delay( 529, '999', 1 ) === 20, 'retry-after capped' );
+	check( wpaie_network_retry_delay( new WP_Error( 'wpaie_timeout', '' ), 1 ) === null && wpaie_network_retry_delay( new WP_Error( 'wpaie_network', '' ), 1 ) === 2, 'timeouts are not retried, connection errors are' );
+} );
+
+test( 'review 2 fix: lock token and cleanup of images of an unsaved step', function () {
+	require_once dirname( __DIR__ ) . '/wp-ai-editor/includes/ajax.php';
+	wpaie_acquire_lock();
+	check( wpaie_lock_still_held(), 'lock held after acquiring' );
+	set_transient( 'wpaie_lock_1', 'someone-else' );
+	check( ! wpaie_lock_still_held(), 'detects a lock taken over by another request' );
+	wpaie_release_lock();
+	check( get_transient( 'wpaie_lock_1' ) === 'someone-else', 'does not release a lock it no longer holds' );
+
+	$state          = wpaie_empty_conversation();
+	$state['files'] = [ 1 => 'file_old', 2 => 'file_new' ];
+	wpaie_test_queue_response( 200, [ 'id' => 'file_new', 'type' => 'file_deleted' ] );
+	wpaie_discard_new_files( $state, [ 1 => 'file_old' ], 'k' );
+	$requests = $GLOBALS['wp_test']['requests'];
+	check( count( $requests ) === 1 && str_ends_with( $requests[0]['url'], '/files/file_new' ) && $requests[0]['args']['method'] === 'DELETE', 'only the newly uploaded file is deleted' );
 } );
 
 echo "\n" . ( $failures ? "$failures of $count checks FAILED\n" : "All $count checks passed\n" );

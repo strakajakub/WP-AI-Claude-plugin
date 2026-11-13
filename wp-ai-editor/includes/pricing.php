@@ -44,18 +44,64 @@ function wpaie_model_prices(): array {
 				'long_input'     => 0.50,
 				'long_output'    => 2.50,
 			],
+			// Models that server-side fallbacks can route a declined request to, and older models.
+			'claude-fable-5-1'  => [
+				'input'      => 10.0,
+				'output'     => 50.0,
+				'cache_read' => 1.0,
+			],
+			'claude-opus-5'     => [
+				'input'      => 5.0,
+				'output'     => 25.0,
+				'cache_read' => 0.50,
+			],
+			'claude-opus-4-8'   => [
+				'input'      => 5.0,
+				'output'     => 25.0,
+				'cache_read' => 0.50,
+			],
+			'claude-sonnet-5'   => [
+				'input'      => 2.0,
+				'output'     => 10.0,
+				'cache_read' => 0.20,
+			],
+			'claude-haiku-4-5'  => [
+				'input'      => 1.0,
+				'output'     => 5.0,
+				'cache_read' => 0.10,
+			],
 		]
 	);
+}
+
+/**
+ * Prices for a model. An unknown model (e.g. added with the wpaie_models filter without a price,
+ * or a new fallback model) is costed at the most expensive known price, so it can never slip
+ * past the monthly budget as "free".
+ */
+function wpaie_prices_for( string $model ): array {
+	$all = wpaie_model_prices();
+	if ( isset( $all[ $model ] ) ) {
+		return $all[ $model ];
+	}
+	static $logged = [];
+	if ( ! isset( $logged[ $model ] ) ) {
+		$logged[ $model ] = true;
+		wpaie_log( 'No price for model, using the most expensive known price (add it with the wpaie_model_prices filter).', [ 'model' => $model ] );
+	}
+	usort( $all, fn( $a, $b ) => (float) $b['output'] <=> (float) $a['output'] );
+	return $all[0] ?? [
+		'input'      => 0.0,
+		'output'     => 0.0,
+		'cache_read' => 0.0,
+	];
 }
 
 /**
  * Estimated cost of one usage object (input/output/cache tokens) in USD.
  */
 function wpaie_usage_cost( string $model, $usage ): float {
-	$prices = wpaie_model_prices()[ $model ] ?? null;
-	if ( ! $prices ) {
-		return 0.0;
-	}
+	$prices = wpaie_prices_for( $model );
 	$in    = (int) wpaie_prop( $usage, 'input_tokens', 0 );
 	$out   = (int) wpaie_prop( $usage, 'output_tokens', 0 );
 	$write = (int) wpaie_prop( $usage, 'cache_creation_input_tokens', 0 );

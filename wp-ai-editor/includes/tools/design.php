@@ -633,6 +633,13 @@ function wpaie_rename_menu_item( int $menu_id, int $item_id, string $title ) {
 	if ( ! $item || $item->post_type !== 'nav_menu_item' ) {
 		return wpaie_tool_error( "Menu item #$item_id does not exist." );
 	}
+	// wp_update_nav_menu_item() assigns the item to $menu_id – with a wrong menu it would move it.
+	if ( ! is_object_in_term( $item_id, 'nav_menu', $menu_id ) ) {
+		$menus = wp_get_object_terms( $item_id, 'nav_menu', [ 'fields' => 'ids' ] );
+		return wpaie_tool_error(
+			"Menu item #$item_id is not in menu #$menu_id" . ( ! is_wp_error( $menus ) && $menus ? ' (it is in menu #' . implode( ', #', $menus ) . ')' : '' ) . '. Use list_menus to get the right IDs.'
+		);
+	}
 	$nav = wp_setup_nav_menu_item( $item );
 	return wp_update_nav_menu_item(
 		$menu_id,

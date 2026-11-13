@@ -72,6 +72,9 @@ class WPAIE_Test_DB {
 			}
 			return $out;
 		}
+		if ( is_array( $query ) && str_contains( $query[0], 'id > %d AND reverted_at IS NULL' ) ) {
+			return array_values( array_filter( array_reverse( array_values( $this->rows ) ), fn( $r ) => $r->id > (int) $query[1][0] && ! $r->reverted_at ) );
+		}
 		return array_reverse( array_values( $this->rows ) );
 	}
 	public $posts = 'wp_posts';

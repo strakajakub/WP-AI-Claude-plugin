@@ -258,8 +258,9 @@ function wpaie_api_stream_request( string $api_key, array $payload, array $betas
 
 		if ( $errno && ! $streamed ) {
 			$error = wpaie_network_error( new WP_Error( 'http_request_failed', "cURL error $errno: $errstr" ), $timeout );
-			if ( $error->get_error_code() !== 'wpaie_timeout' && $attempt < WPAIE_MAX_ATTEMPTS && wpaie_can_wait( 2 * $attempt ) ) {
-				sleep( 2 * $attempt );
+			$wait  = wpaie_network_retry_delay( $error, $attempt );
+			if ( $wait !== null ) {
+				sleep( $wait );
 				continue;
 			}
 			return $error;
@@ -275,13 +276,10 @@ function wpaie_api_stream_request( string $api_key, array $payload, array $betas
 		}
 
 		$data = json_decode( $raw_body );
-		if ( in_array( $status, [ 408, 409, 429, 500, 502, 503, 504, 529 ], true ) && $attempt < WPAIE_MAX_ATTEMPTS ) {
-			$wait = (int) ( $resp_hdr['retry-after'] ?? 0 );
-			$wait = $wait > 0 ? min( $wait, 20 ) : 2 ** $attempt;
-			if ( wpaie_can_wait( $wait ) ) {
-				sleep( $wait );
-				continue;
-			}
+		$wait = wpaie_retry_delay( $status, (string) ( $resp_hdr['retry-after'] ?? '' ), $attempt );
+		if ( $wait !== null ) {
+			sleep( $wait );
+			continue;
 		}
 		$error = wpaie_api_error( $status, $data, (string) ( $resp_hdr['request-id'] ?? '' ) );
 		wpaie_log( 'API error (stream)', (array) $error->get_error_data() );

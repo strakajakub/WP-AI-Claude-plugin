@@ -172,9 +172,9 @@ function wpaie_api_request( string $method, string $path, string $api_key, ?arra
 
 		if ( is_wp_error( $response ) ) {
 			$error = wpaie_network_error( $response, $timeout );
-			// A timeout is not retried: another full-length attempt would exceed PHP/proxy limits.
-			if ( $error->get_error_code() !== 'wpaie_timeout' && $attempt < WPAIE_MAX_ATTEMPTS && wpaie_can_wait( 2 * $attempt ) ) {
-				sleep( 2 * $attempt );
+			$wait  = wpaie_network_retry_delay( $error, $attempt );
+			if ( $wait !== null ) {
+				sleep( $wait );
 				continue;
 			}
 			wpaie_log( 'Network error', [ 'path' => $path, 'error' => $response->get_error_message() ] );
@@ -191,20 +191,43 @@ function wpaie_api_request( string $method, string $path, string $api_key, ?arra
 			return $data;
 		}
 
-		$retryable = in_array( $status, [ 408, 409, 429, 500, 502, 503, 504, 529 ], true );
-		if ( $retryable && $attempt < WPAIE_MAX_ATTEMPTS ) {
-			$wait = (int) wp_remote_retrieve_header( $response, 'retry-after' );
-			$wait = $wait > 0 ? min( $wait, 20 ) : 2 ** $attempt;
-			if ( wpaie_can_wait( $wait ) ) {
-				sleep( $wait );
-				continue;
-			}
+		$wait = wpaie_retry_delay( $status, (string) wp_remote_retrieve_header( $response, 'retry-after' ), $attempt );
+		if ( $wait !== null ) {
+			sleep( $wait );
+			continue;
 		}
 
 		$error = wpaie_api_error( $status, $data, (string) wp_remote_retrieve_header( $response, 'request-id' ) );
 		wpaie_log( 'API error', [ 'path' => $path ] + (array) $error->get_error_data() );
 		return $error;
 	}
+}
+
+/**
+ * Retry policy for an HTTP error response, shared by the normal and the streaming client.
+ *
+ * @return int|null Seconds to wait before the next attempt, or null when not to retry.
+ */
+function wpaie_retry_delay( int $status, string $retry_after, int $attempt ): ?int {
+	if ( $attempt >= WPAIE_MAX_ATTEMPTS || ! in_array( $status, [ 408, 409, 429, 500, 502, 503, 504, 529 ], true ) ) {
+		return null;
+	}
+	$wait = (int) $retry_after;
+	$wait = $wait > 0 ? min( $wait, 20 ) : 2 ** $attempt;
+	return wpaie_can_wait( $wait ) ? $wait : null;
+}
+
+/**
+ * Retry policy for a connection error (already mapped by wpaie_network_error).
+ * A timeout is not retried: another full-length attempt would exceed PHP/proxy limits.
+ *
+ * @return int|null Seconds to wait, or null when not to retry.
+ */
+function wpaie_network_retry_delay( WP_Error $error, int $attempt ): ?int {
+	if ( $error->get_error_code() === 'wpaie_timeout' || $attempt >= WPAIE_MAX_ATTEMPTS || ! wpaie_can_wait( 2 * $attempt ) ) {
+		return null;
+	}
+	return 2 * $attempt;
 }
 
 /**
