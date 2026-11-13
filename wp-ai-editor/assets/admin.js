@@ -364,8 +364,10 @@
 			if (!text || busy) {
 				return;
 			}
+			setBusy(true);
 			var extra = hooks.beforeSend ? await hooks.beforeSend() : { params: {}, html: '' };
 			if (extra === false) {
+				setBusy(false);
 				return;
 			}
 			inputEl.value = '';
@@ -435,7 +437,159 @@
 		});
 	}
 
+	// ─── Conversations, images, context ──────────────────────────────────────
+
+	function initExtras() {
+		var hooks = window.wpaieChatHooks;
+		if (!hooks || !document.getElementById('wpaie-messages')) {
+			return;
+		}
+
+		// Conversation switcher and delete.
+		var select = document.getElementById('wpaie-conversations');
+		if (select) {
+			select.addEventListener('change', async function () {
+				if (hooks.isBusy()) {
+					select.value = config.conversation || '';
+					return;
+				}
+				var res = select.value
+					? await call('wpaie_switch_conversation', { conversation: select.value })
+					: await call('wpaie_new_conversation');
+				if (res.success) {
+					window.location.reload();
+				} else {
+					hooks.addBubble('ai', '⚠ ' + escHtml(errorMessage(res.data)), 'wpaie-bubble--error');
+				}
+			});
+		}
+		var del = document.getElementById('wpaie-delete');
+		if (del) {
+			del.addEventListener('click', async function () {
+				if (hooks.isBusy() || !window.confirm(t('confirmDelete'))) {
+					return;
+				}
+				var res = await call('wpaie_delete_conversation');
+				if (res.success) {
+					window.location.reload();
+				} else {
+					hooks.addBubble('ai', '⚠ ' + escHtml(errorMessage(res.data)), 'wpaie-bubble--error');
+				}
+			});
+		}
+
+		// Image attachments: button, paste, drag & drop.
+		var pending = [];
+		var strip = document.getElementById('wpaie-attachments');
+		var fileInput = document.getElementById('wpaie-file');
+		var attachBtn = document.getElementById('wpaie-attach');
+		var maxImages = config.maxImages || 5;
+
+		function renderStrip() {
+			if (!strip) {
+				return;
+			}
+			strip.hidden = pending.length === 0;
+			strip.innerHTML = '';
+			pending.forEach(function (item, index) {
+				var wrap = document.createElement('span');
+				wrap.className = 'wpaie-attachment';
+				var img = document.createElement('img');
+				img.src = item.preview;
+				img.alt = '';
+				var rm = document.createElement('button');
+				rm.type = 'button';
+				rm.textContent = '×';
+				rm.title = t('remove');
+				rm.addEventListener('click', function () {
+					URL.revokeObjectURL(item.preview);
+					pending.splice(index, 1);
+					renderStrip();
+				});
+				wrap.appendChild(img);
+				wrap.appendChild(rm);
+				strip.appendChild(wrap);
+			});
+		}
+
+		function addFiles(files) {
+			Array.prototype.forEach.call(files, function (file) {
+				if (!/^image\/(jpeg|png|gif|webp)$/.test(file.type)) {
+					return;
+				}
+				if (pending.length >= maxImages) {
+					window.alert(t('tooManyImgs'));
+					return;
+				}
+				pending.push({ file: file, preview: URL.createObjectURL(file) });
+			});
+			renderStrip();
+		}
+
+		if (attachBtn && fileInput) {
+			attachBtn.addEventListener('click', function () { fileInput.click(); });
+			fileInput.addEventListener('change', function () {
+				addFiles(fileInput.files);
+				fileInput.value = '';
+			});
+			var input = document.getElementById('wpaie-input');
+			input.addEventListener('paste', function (e) {
+				var files = e.clipboardData && e.clipboardData.files;
+				if (files && files.length) {
+					e.preventDefault();
+					addFiles(files);
+				}
+			});
+			var chat = document.getElementById('wpaie-chat');
+			chat.addEventListener('dragover', function (e) { e.preventDefault(); });
+			chat.addEventListener('drop', function (e) {
+				if (e.dataTransfer && e.dataTransfer.files.length) {
+					e.preventDefault();
+					addFiles(e.dataTransfer.files);
+				}
+			});
+		}
+
+		var contextSent = false;
+
+		// Before a message is sent: upload the images, add the page context (first message only).
+		hooks.beforeSend = async function () {
+			var params = {};
+			var html = '';
+			if (!contextSent && config.context) {
+				if (config.context.post) {
+					params.context_post = String(config.context.post);
+				}
+				if (config.context.url) {
+					params.context_url = config.context.url;
+				}
+			}
+			if (pending.length) {
+				var ids = [];
+				var note = hooks.addBubble('ai', escHtml(t('uploading')), 'wpaie-typing-status');
+				for (var i = 0; i < pending.length; i++) {
+					var res = await call('wpaie_upload_image', { files: [pending[i].file] });
+					if (!res.success) {
+						note.remove();
+						hooks.addBubble('ai', '⚠ ' + escHtml(errorMessage(res.data)), 'wpaie-bubble--error');
+						return false;
+					}
+					ids.push(res.data.id);
+					html += '<img class="wpaie-msg-image" src="' + escHtml(res.data.thumb || pending[i].preview) + '" alt="" />';
+				}
+				note.remove();
+				params.images = ids.join(',');
+				pending.forEach(function (item) { URL.revokeObjectURL(item.preview); });
+				pending = [];
+				renderStrip();
+			}
+			contextSent = true;
+			return { params: params, html: html };
+		};
+	}
+
 	window.wpaieCall = call;
 	initChat();
+	initExtras();
 	initSettings();
 })();

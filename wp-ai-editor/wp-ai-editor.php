@@ -56,3 +56,5 @@ require_once WPAIE_DIR . 'includes/conversation.php';
 require_once WPAIE_DIR . 'includes/agent.php';
 require_once WPAIE_DIR . 'includes/ajax.php';
 require_once WPAIE_DIR . 'includes/admin.php';
+require_once WPAIE_DIR . 'includes/images.php';
+require_once WPAIE_DIR . 'includes/integrations.php';

@@ -510,5 +510,58 @@ test( 'stream: real cURL request against a local fake API', function () {
 	proc_close( $server );
 } );
 
+// Stubs for the image tests.
+function wp_attachment_is_image( $id ) { return in_array( (int) $id, [ 11, 12 ], true ); }
+function get_attached_file( $id ) { return __DIR__ . '/fixtures/pixel.png'; }
+function get_post_mime_type( $id ) { return 'image/png'; }
+function image_get_intermediate_size( $id, $size ) { return false; }
+function wp_basename( $path ) { return basename( $path ); }
+function home_url( $path = '' ) { return 'https://example.test' . $path; }
+function wp_parse_url( $url, $component = -1 ) { return parse_url( $url, $component ); }
+
+test( 'images: uploaded once per conversation to the Files API, sent as file blocks', function () {
+	wpaie_test_queue_response( 200, [ 'id' => 'file_abc', 'type' => 'file' ] );
+	$state             = wpaie_empty_conversation();
+	$_POST['images']   = '11';
+	$blocks            = wpaie_request_extra_blocks( $state, 'k' );
+	unset( $_POST['images'] );
+
+	$req = $GLOBALS['wp_test']['requests'][0];
+	check( $req['url'] === WPAIE_API_BASE . '/files' && str_starts_with( $req['args']['headers']['content-type'], 'multipart/form-data; boundary=' ), 'multipart upload to /files' );
+	check( str_contains( $req['args']['body'], 'filename="pixel.png"' ) && str_contains( $req['args']['body'], "Content-Type: image/png\r\n\r\n" ), 'file part with name and type' );
+	check( $state['files'] === [ 11 => 'file_abc' ], 'file id remembered in the conversation' );
+	check( count( $blocks ) === 2 && $blocks[1]['source'] === [ 'type' => 'file', 'file_id' => 'file_abc' ], 'image block references the file' );
+	check( str_starts_with( $blocks[0]['text'], WPAIE_IMAGE_PREFIX . '11]' ), 'note with the attachment ID' );
+
+	$again = wpaie_attachment_file_id( 11, $state['files'], 'k' );
+	check( $again === 'file_abc' && count( $GLOBALS['wp_test']['requests'] ) === 1, 'not uploaded twice' );
+	check( is_wp_error( wpaie_attachment_file_id( 99, $state['files'], 'k' ) ), 'non-image attachment refused' );
+
+	$_POST['images'] = '11,12,11,12,11,12';
+	check( is_wp_error( wpaie_request_extra_blocks( $state, 'k' ) ), 'too many images refused' );
+	unset( $_POST['images'] );
+
+	// Transcript shows the image and hides the note.
+	$state = wpaie_conversation_add_user_text( $state, 'Použij jako logo', $blocks );
+	$items = wpaie_conversation_transcript( $state );
+	check( count( $items ) === 1 && $items[0]['images'] === [ 11 ] && $items[0]['text'] === 'Použij jako logo', 'transcript: image + text only' );
+	check( wpaie_conversation_title( $state ) === 'Použij jako logo', 'title ignores the note' );
+
+	// Deleting the conversation deletes its files.
+	wpaie_conversation_save( $state );
+	update_option( WPAIE_OPTION_KEY, [ 'api_key' => 'sk-ant-x' ] );
+	wpaie_test_queue_response( 200, [ 'id' => 'file_abc', 'type' => 'file_deleted' ] );
+	wpaie_conversation_delete( $state['id'] );
+	$last = end( $GLOBALS['wp_test']['requests'] );
+	check( $last['args']['method'] === 'DELETE' && $last['url'] === WPAIE_API_BASE . '/files/file_abc', 'file deleted with the conversation' );
+} );
+
+test( 'context note: only same-site URLs and editable posts', function () {
+	check( wpaie_context_note( 0, 'https://example.test/o-nas/' ) === WPAIE_CONTEXT_PREFIX . 'The user was viewing https://example.test/o-nas/ on the site.]', 'own URL accepted' );
+	check( wpaie_context_note( 0, 'https://evil.test/' ) === '', 'foreign URL ignored' );
+	$state = wpaie_conversation_add_user_text( wpaie_empty_conversation(), 'tuhle stránku', [ [ 'type' => 'text', 'text' => wpaie_context_note( 0, 'https://example.test/' ) ] ] );
+	check( wpaie_conversation_transcript( $state )[0]['text'] === 'tuhle stránku', 'context hidden in the transcript' );
+} );
+
 echo "\n" . ( $failures ? "$failures of $count checks FAILED\n" : "All $count checks passed\n" );
 exit( $failures ? 1 : 0 );

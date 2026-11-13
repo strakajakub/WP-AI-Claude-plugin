@@ -80,6 +80,7 @@ function current_user_can( $cap, ...$args ) { return ! in_array( $cap, $GLOBALS[
 function current_time( $type, $gmt = false ) { return gmdate( 'Y-m-d H:i:s' ); }
 function wp_rand( $min = 0, $max = 0 ) { return $max; }
 function get_post( $id ) { return null; }
+function absint( $v ) { return abs( (int) $v ); }
 function add_settings_error( $setting, $code, $message ) { $GLOBALS['wp_test']['settings_errors'][] = $code; }
 
 function get_option( $name, $default = false ) { return $GLOBALS['wp_test']['options'][ $name ] ?? $default; }

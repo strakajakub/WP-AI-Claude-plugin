@@ -15,6 +15,13 @@ A WordPress plugin that adds an AI assistant chat (Claude by Anthropic) to the a
 | Site identity | title, tagline, logo, header image | change / remove | immediately |
 | Additional CSS | current CSS | append / replace | immediately (revertible in Customizer revisions) |
 
+### Working with the chat
+
+- **Several conversations:** switch between your last 30 conversations in the chat header, start a new one (＋) or delete the current one (🗑).
+- **Images:** attach screenshots or photos with 📎, by pasting or by dragging them into the chat ("make the header look like this", "use this as the logo"). They are saved to the Media Library and sent to the model through the Files API.
+- **Block editor sidebar:** in the block editor, open *AI Editor* from the toolbar (or ⋮ → Plugins). The chat knows which post you are editing ("shorten this page"). Reload the editor after the assistant changes the post.
+- **Admin bar:** the *AI Editor* link opens the chat with the page you are viewing as context.
+
 ### Approvals and undo
 
 - **Ask before changes:** before a change that is visible on the site immediately (styles, CSS, templates, menus, site identity, publishing), the chat shows a card with a preview (a diff of the content or template, the CSS or JSON to be applied, a table of old and new values) and waits for **Apply** or **Reject**. In Settings you can switch this to every change, including drafts, or turn it off.
@@ -107,6 +114,7 @@ Errors are shown right in the chat, with the HTTP status and the `request-id` so
 | The monthly budget is used up | Raise the budget in Settings, or wait for the next month (UTC). |
 | Answers appear only at the end / never arrive | A proxy or plugin buffers the response. Turn off *Live answers* in Settings. |
 | This page has expired | Reload the page (F5). |
+| An image in this conversation is no longer available | The API key changed and the uploaded images belong to the old one. Start a new chat. |
 | A previous request is still running | The chat is open in another tab. Wait for it to finish. |
 | The model declined this request (safety filter) | Rephrase the request or choose another model. |
 | This model requires 30-day data retention | Your organization uses zero data retention, so Fable 5.2 is not available. Choose Opus 5.5. |
@@ -147,9 +155,11 @@ wp-ai-editor/              # the plugin itself (contents of the ZIP)
 │   ├── changes.php        # change log and undo
 │   ├── conversation.php   # history storage and compaction
 │   ├── agent.php          # a single agent step
+│   ├── images.php         # image attachments (Media Library + Files API), page context
+│   ├── integrations.php   # conversation switcher, block editor sidebar, admin bar
 │   ├── ajax.php           # AJAX endpoints
 │   └── admin.php          # admin screens
-└── assets/                # admin.css, admin.js
+└── assets/                # admin.css, admin.js, editor.js (block editor sidebar)
 tests/                     # dependency-free tests (WordPress stubs)
 ```
 

@@ -140,7 +140,7 @@ function wpaie_is_beta_rejection( WP_Error $error ): bool {
  *
  * @return object|WP_Error Decoded JSON body on success.
  */
-function wpaie_api_request( string $method, string $path, string $api_key, ?array $payload, array $betas = [], int $timeout = 30 ) {
+function wpaie_api_request( string $method, string $path, string $api_key, ?array $payload, array $betas = [], int $timeout = 30, ?array $raw = null ) {
 	$headers = [
 		'x-api-key'         => $api_key,
 		'anthropic-version' => WPAIE_API_VERSION,
@@ -155,7 +155,11 @@ function wpaie_api_request( string $method, string $path, string $api_key, ?arra
 		'timeout' => $timeout,
 		'headers' => $headers,
 	];
-	if ( $payload !== null ) {
+	if ( $raw !== null ) {
+		// Non-JSON body, e.g. a multipart file upload.
+		$args['body']                    = (string) $raw['body'];
+		$args['headers']['content-type'] = (string) $raw['content_type'];
+	} elseif ( $payload !== null ) {
 		$body = wp_json_encode( $payload, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE );
 		if ( $body === false ) {
 			return new WP_Error( 'wpaie_encode', __( 'The request could not be encoded as JSON (invalid characters in the content?).', 'wp-ai-editor' ) );
@@ -244,7 +248,9 @@ function wpaie_api_error( int $status, $data, string $request_id = '' ): WP_Erro
 	$type = (string) wpaie_prop( wpaie_prop( $data, 'error' ), 'type', '' );
 	$raw  = (string) wpaie_prop( wpaie_prop( $data, 'error' ), 'message', '' );
 
-	if ( $status === 400 && stripos( $raw, 'retention' ) !== false ) {
+	if ( stripos( $raw, 'file' ) !== false && ( $status === 404 || stripos( $raw, 'not found' ) !== false ) ) {
+		$message = __( 'An image in this conversation is no longer available (e.g. the API key was changed). Start a new chat.', 'wp-ai-editor' );
+	} elseif ( $status === 400 && stripos( $raw, 'retention' ) !== false ) {
 		$message = __( 'This model requires 30-day data retention, which your Anthropic organization does not have (e.g. zero data retention). Choose another model in Settings.', 'wp-ai-editor' );
 	} elseif ( $raw !== '' && stripos( $raw, 'credit balance' ) !== false ) {
 		$message = __( 'Your Anthropic account is out of credit. Top it up in the Claude Console (Settings → Billing).', 'wp-ai-editor' );
@@ -298,4 +304,55 @@ function wpaie_test_connection( string $api_key, string $model ) {
 		__( 'Connection works. The key is valid and the model "%s" is available.', 'wp-ai-editor' ),
 		$name
 	);
+}
+
+// ─── Files API ────────────────────────────────────────────────────────────────
+
+/**
+ * Upload a file to the Files API (used for images, so the conversation stores only a file ID).
+ *
+ * @return string|WP_Error File ID.
+ */
+function wpaie_files_upload( string $api_key, string $path, string $mime, string $filename ) {
+	$bytes = is_readable( $path ) ? file_get_contents( $path ) : false; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+	if ( $bytes === false ) {
+		return new WP_Error( 'wpaie_file', __( 'The image file could not be read on the server.', 'wp-ai-editor' ) );
+	}
+	$boundary = 'wpaie' . bin2hex( random_bytes( 8 ) );
+	$filename = str_replace( [ '"', "\r", "\n" ], '', $filename );
+	$body     = "--$boundary\r\n"
+		. "Content-Disposition: form-data; name=\"file\"; filename=\"$filename\"\r\n"
+		. "Content-Type: $mime\r\n\r\n"
+		. $bytes . "\r\n--$boundary--\r\n";
+
+	$data = wpaie_api_request(
+		'POST',
+		'/files',
+		$api_key,
+		null,
+		[],
+		60,
+		[
+			'body'         => $body,
+			'content_type' => 'multipart/form-data; boundary=' . $boundary,
+		]
+	);
+	if ( is_wp_error( $data ) ) {
+		return $data;
+	}
+	$id = (string) wpaie_prop( $data, 'id', '' );
+	return $id !== '' ? $id : new WP_Error( 'wpaie_file', __( 'The Files API did not return a file ID.', 'wp-ai-editor' ) );
+}
+
+/**
+ * Delete a file from the Files API (best effort, errors are only logged).
+ */
+function wpaie_files_delete( string $api_key, string $file_id ): void {
+	if ( $api_key === '' || ! preg_match( '/^[A-Za-z0-9_-]+$/', $file_id ) ) {
+		return;
+	}
+	$result = wpaie_api_request( 'DELETE', '/files/' . $file_id, $api_key, null, [], 15 );
+	if ( is_wp_error( $result ) ) {
+		wpaie_log( 'Could not delete a file from the Files API', [ 'file' => $file_id ] );
+	}
 }

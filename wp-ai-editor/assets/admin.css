@@ -274,3 +274,66 @@
 #wpaie-history .wpaie-undo { white-space: nowrap; }
 
 #wpaie-cost { font-size: 11px; color: #777; }
+
+/* ── Conversations ── */
+#wpaie-conversations { max-width: 260px; font-size: 12px; min-height: 28px; }
+
+/* ── Attachments and context ── */
+#wpaie-attachments {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	padding: 8px 14px 0;
+	background: #fff;
+	border-top: 1px solid #e5e3f3;
+}
+#wpaie-attachments[hidden] { display: none; }
+.wpaie-attachment { position: relative; }
+.wpaie-attachment img {
+	width: 56px;
+	height: 56px;
+	object-fit: cover;
+	border: 1px solid #e5e3f3;
+	border-radius: 6px;
+}
+.wpaie-attachment button {
+	position: absolute;
+	top: -6px;
+	right: -6px;
+	width: 18px;
+	height: 18px;
+	padding: 0;
+	font-size: 12px;
+	line-height: 16px;
+	color: #fff;
+	background: #555;
+	border: 0;
+	border-radius: 50%;
+	cursor: pointer;
+}
+#wpaie-context {
+	padding: 6px 14px;
+	font-size: 12px;
+	color: #5b21b6;
+	background: #f3f0ff;
+	border-top: 1px solid #e5e3f3;
+}
+#wpaie-attach { align-self: center; }
+.wpaie-msg--ai .wpaie-bubble.wpaie-typing-status { padding: 6px 10px; }
+
+/* ── Embedded in the block editor sidebar ── */
+.wpaie-embed #wpadminbar,
+.wpaie-embed #adminmenumain,
+.wpaie-embed #wpfooter,
+.wpaie-embed .notice:not(.wpaie-notice),
+.wpaie-embed #screen-meta-links,
+.wpaie-embed .wpaie-footnote { display: none !important; }
+html.wp-toolbar:has(.wpaie-embed) { padding-top: 0; }
+.wpaie-embed #wpcontent,
+.wpaie-embed #wpfooter { margin-left: 0 !important; }
+.wpaie-embed #wpcontent { padding-left: 0; }
+.wpaie-embed #wpaie-wrap { max-width: none; margin: 0; padding: 0 8px 8px; }
+.wpaie-embed #wpaie-header { flex-wrap: wrap; padding: 8px 0; }
+.wpaie-embed #wpaie-header h1 { font-size: 15px; }
+.wpaie-embed #wpaie-chat { height: calc(100vh - 110px); min-height: 300px; margin-top: 8px; }
+.wpaie-embed .wpaie-bubble { max-width: 92%; }
