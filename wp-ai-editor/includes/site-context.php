@@ -52,7 +52,7 @@ function wpaie_site_context(): string {
 	}
 	if ( ! $is_block ) {
 		$lines[] = 'The site runs a classic theme, so the Site Editor (Appearance → Editor → Templates) does not exist here; do not suggest it. '
-			. 'Blog and archive layouts are controlled by the theme (PHP and its Customizer settings). Visual fixes that theme.json cannot do '
+			. 'Blog and archive layouts are controlled by the theme and its Customizer settings (list_customizer_settings, if available). Visual fixes that neither the Customizer nor theme.json can do '
 			. 'go through Additional CSS (update_custom_css, if that tool is available to the user; otherwise an administrator has to do it).';
 	}
 
@@ -105,6 +105,9 @@ function wpaie_system_prompt( array $tools ): string {
 			$abilities[] = "- $text,";
 		}
 	}
+	if ( $has( 'update_customizer_settings' ) ) {
+		$abilities[] = '- the theme\'s Customizer settings (Appearance → Customize: layouts, container width, typography, colors, buttons, header and footer builder, blog options – e.g. everything Astra offers there). Find them with list_customizer_settings, read one with get_customizer_setting before changing it,';
+	}
 	if ( $has( 'update_seo' ) && function_exists( 'wpaie_seo_plugin' ) && wpaie_seo_plugin() ) {
 		$abilities[] = '- SEO titles and meta descriptions (' . wpaie_seo_plugin()['name'] . '),';
 	}
@@ -113,7 +116,9 @@ function wpaie_system_prompt( array $tools ): string {
 	}
 	$abilities = $abilities ? implode( "\n", $abilities ) : '- (no editing tools are available to this user)';
 
-	$limits = 'edit theme or plugin PHP files, change Customizer settings other than site identity and Additional CSS (e.g. Astra\'s blog layout options), or install or activate themes and plugins.';
+	$limits = $has( 'update_customizer_settings' )
+		? 'edit theme or plugin PHP files, change settings outside the Customizer and your other tools (e.g. a page builder\'s own settings pages), or install or activate themes and plugins.'
+		: 'edit theme or plugin PHP files, change Customizer settings other than site identity and Additional CSS (e.g. Astra\'s blog layout options), or install or activate themes and plugins.';
 	if ( ! $is_admin ) {
 		$limits .= ' This user is not an administrator: site-wide design changes (styles, CSS, templates, menus, site identity) are not available to them – suggest asking an administrator.';
 	}
@@ -121,7 +126,7 @@ function wpaie_system_prompt( array $tools ): string {
 		? 'Every change you make is logged and the user can undo it from the chat or the History page.'
 		: 'Every change you make is logged and the user can undo it from the chat.';
 	$live = $is_admin
-		? "\n- Site identity, Additional CSS, global styles, templates and menus take effect on the live site immediately (they are not drafts). Tell the user; after CSS changes, suggest clearing any cache. Removing the logo removes the logo image; most themes then show the site title as text in the header."
+		? "\n- Site identity, Customizer settings, Additional CSS, global styles, templates and menus take effect on the live site immediately (they are not drafts). Tell the user; after CSS changes, suggest clearing any cache. Removing the logo removes the logo image; most themes then show the site title as text in the header."
 		: '';
 
 	return <<<PROMPT

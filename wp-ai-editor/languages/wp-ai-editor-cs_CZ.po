@@ -23,7 +23,7 @@ msgstr "AI Editor — Historie"
 msgid "History"
 msgstr "Historie"
 
-#: wp-ai-editor/includes/admin.php:19 wp-ai-editor/includes/admin.php:314
+#: wp-ai-editor/includes/admin.php:19 wp-ai-editor/includes/admin.php:317
 msgid "AI Editor — Settings"
 msgstr "AI Editor — Nastavení"
 
@@ -85,19 +85,19 @@ msgstr "Vrátit tuto změnu? Cokoli, co se od té doby změnilo na stejném mís
 msgid "Testing…"
 msgstr "Testuji…"
 
-#: wp-ai-editor/includes/admin.php:60 wp-ai-editor/includes/admin.php:217
+#: wp-ai-editor/includes/admin.php:60 wp-ai-editor/includes/admin.php:220
 msgid "The assistant wants to make this change:"
 msgstr "Asistent chce provést tuto změnu:"
 
-#: wp-ai-editor/includes/admin.php:61 wp-ai-editor/includes/admin.php:222
+#: wp-ai-editor/includes/admin.php:61 wp-ai-editor/includes/admin.php:225
 msgid "live on the site"
 msgstr "živě na webu"
 
-#: wp-ai-editor/includes/admin.php:62 wp-ai-editor/includes/admin.php:228
+#: wp-ai-editor/includes/admin.php:62 wp-ai-editor/includes/admin.php:231
 msgid "Apply"
 msgstr "Použít"
 
-#: wp-ai-editor/includes/admin.php:63 wp-ai-editor/includes/admin.php:229
+#: wp-ai-editor/includes/admin.php:63 wp-ai-editor/includes/admin.php:232
 msgid "Reject"
 msgstr "Zamítnout"
 
@@ -109,11 +109,11 @@ msgstr "Schváleno"
 msgid "Rejected"
 msgstr "Zamítnuto"
 
-#: wp-ai-editor/includes/admin.php:66 wp-ai-editor/includes/admin.php:206 wp-ai-editor/includes/admin.php:278
+#: wp-ai-editor/includes/admin.php:66 wp-ai-editor/includes/admin.php:209 wp-ai-editor/includes/admin.php:281
 msgid "Undo"
 msgstr "Vrátit"
 
-#: wp-ai-editor/includes/admin.php:67 wp-ai-editor/includes/admin.php:276
+#: wp-ai-editor/includes/admin.php:67 wp-ai-editor/includes/admin.php:279
 msgid "Undone"
 msgstr "Vráceno"
 
@@ -185,175 +185,183 @@ msgstr "styly"
 msgid "global styles (theme.json) and Additional CSS,"
 msgstr "globální styly (theme.json) a Doplňkový CSS,"
 
-#: wp-ai-editor/includes/admin.php:147
+#: wp-ai-editor/includes/admin.php:148
+msgid "theme settings"
+msgstr "nastavení šablony"
+
+#: wp-ai-editor/includes/admin.php:148
+msgid "everything in the Customizer: layout, fonts, colors, header, footer, blog (e.g. Astra),"
+msgstr "vše v Přizpůsobit: rozložení, písma, barvy, záhlaví, zápatí, blog (např. Astra),"
+
+#: wp-ai-editor/includes/admin.php:150
 msgid "templates"
 msgstr "šablony"
 
-#: wp-ai-editor/includes/admin.php:147
+#: wp-ai-editor/includes/admin.php:150
 msgid "block templates (FSE),"
 msgstr "block templates (FSE),"
 
-#: wp-ai-editor/includes/admin.php:148
+#: wp-ai-editor/includes/admin.php:151
 msgid "menus and site identity"
 msgstr "menu a identitu webu"
 
-#: wp-ai-editor/includes/admin.php:148
+#: wp-ai-editor/includes/admin.php:151
 msgid "menu items, logo, site title."
 msgstr "položky menu, logo, název webu."
 
-#: wp-ai-editor/includes/admin.php:149
+#: wp-ai-editor/includes/admin.php:152
 msgid "Write to me in any language."
 msgstr "Piš mi v jakémkoli jazyce."
 
-#: wp-ai-editor/includes/admin.php:165
+#: wp-ai-editor/includes/admin.php:168
 msgid "Message for the AI assistant"
 msgstr "Zpráva pro AI asistenta"
 
-#: wp-ai-editor/includes/admin.php:166
+#: wp-ai-editor/includes/admin.php:169
 msgid "What should I change? E.g. \"Change the primary button color to #e63946\"…"
 msgstr "Co mám upravit? Např. „Změň barvu primárního tlačítka na #e63946“…"
 
-#: wp-ai-editor/includes/admin.php:167
+#: wp-ai-editor/includes/admin.php:170
 msgid "Send"
 msgstr "Odeslat"
 
-#: wp-ai-editor/includes/admin.php:172
+#: wp-ai-editor/includes/admin.php:175
 msgid "Enter sends, Shift+Enter adds a new line. Every change can be undone in the chat or in the History."
 msgstr "Enter odešle, Shift+Enter nový řádek. Každou změnu jde vrátit v chatu nebo v Historii."
 
-#: wp-ai-editor/includes/admin.php:245
+#: wp-ai-editor/includes/admin.php:248
 msgid "AI Editor — History of changes"
 msgstr "AI Editor — Historie změn"
 
 #. translators: %d: number of days
-#: wp-ai-editor/includes/admin.php:250
+#: wp-ai-editor/includes/admin.php:253
 #, php-format
 msgid "Every change the assistant made, newest first. Changes are kept for %d days."
 msgstr "Všechny změny, které asistent udělal, od nejnovější. Změny se uchovávají %d dní."
 
-#: wp-ai-editor/includes/admin.php:258
+#: wp-ai-editor/includes/admin.php:261
 msgid "When"
 msgstr "Kdy"
 
-#: wp-ai-editor/includes/admin.php:259
+#: wp-ai-editor/includes/admin.php:262
 msgid "User"
 msgstr "Uživatel"
 
-#: wp-ai-editor/includes/admin.php:260
+#: wp-ai-editor/includes/admin.php:263
 msgid "Change"
 msgstr "Změna"
 
-#: wp-ai-editor/includes/admin.php:266
+#: wp-ai-editor/includes/admin.php:269
 msgid "No changes yet."
 msgstr "Zatím žádné změny."
 
-#: wp-ai-editor/includes/admin.php:321
+#: wp-ai-editor/includes/admin.php:324
 msgid "Anthropic API key"
 msgstr "API klíč Anthropic"
 
 #. translators: %s: constant name
-#: wp-ai-editor/includes/admin.php:329
+#: wp-ai-editor/includes/admin.php:332
 #, php-format
 msgid "The key is set by the %s constant in wp-config.php"
 msgstr "Klíč je nastaven konstantou %s v wp-config.php"
 
 #. translators: %s: masked API key
-#: wp-ai-editor/includes/admin.php:339
+#: wp-ai-editor/includes/admin.php:342
 #, php-format
 msgid "Saved: %s — fill in only to change it"
 msgstr "Uložen: %s — vyplň jen pro změnu"
 
-#: wp-ai-editor/includes/admin.php:341
+#: wp-ai-editor/includes/admin.php:344
 msgid "Remove the saved key"
 msgstr "Odebrat uložený klíč"
 
 #. translators: %s: link to the Claude Console
-#: wp-ai-editor/includes/admin.php:347
+#: wp-ai-editor/includes/admin.php:350
 #, php-format
 msgid "Create a key in the %s."
 msgstr "Klíč vytvoříš v %s."
 
-#: wp-ai-editor/includes/admin.php:351
+#: wp-ai-editor/includes/admin.php:354
 msgid "More secure alternative: add this to wp-config.php:"
 msgstr "Bezpečnější alternativa: přidej do wp-config.php:"
 
-#: wp-ai-editor/includes/admin.php:358
+#: wp-ai-editor/includes/admin.php:361
 msgid "Model"
 msgstr "Model"
 
-#: wp-ai-editor/includes/admin.php:365
+#: wp-ai-editor/includes/admin.php:368
 msgid "Claude Fable 5.2 costs about twice as much as Opus 5.5 and one answer can take several minutes; it requires 30-day data retention on your Anthropic organization (not available with zero data retention)."
 msgstr "Claude Fable 5.2 stojí zhruba dvakrát víc než Opus 5.5 a jedna odpověď může trvat i několik minut; vyžaduje 30denní uchovávání dat v organizaci Anthropic (nefunguje s nulovým uchováváním dat)."
 
-#: wp-ai-editor/includes/admin.php:369
+#: wp-ai-editor/includes/admin.php:372
 msgid "Thinking effort"
 msgstr "Úroveň přemýšlení"
 
-#: wp-ai-editor/includes/admin.php:376
+#: wp-ai-editor/includes/admin.php:379
 msgid "Higher effort means more careful work, but longer waits and higher cost."
 msgstr "Vyšší úroveň znamená pečlivější práci, ale delší čekání a vyšší cenu."
 
-#: wp-ai-editor/includes/admin.php:377
+#: wp-ai-editor/includes/admin.php:380
 msgid "With Claude Fable 5.2, start with High."
 msgstr "U Claude Fable 5.2 začni na Vysoké."
 
-#: wp-ai-editor/includes/admin.php:381
+#: wp-ai-editor/includes/admin.php:384
 msgid "Ask before changes"
 msgstr "Ptát se před změnami"
 
-#: wp-ai-editor/includes/admin.php:388
+#: wp-ai-editor/includes/admin.php:391
 msgid "The assistant shows a preview of the change and waits for Apply or Reject. Every change can be undone in the History either way."
 msgstr "Asistent ukáže náhled změny a počká na Použít nebo Zamítnout. Každou změnu jde v každém případě vrátit v Historii."
 
-#: wp-ai-editor/includes/admin.php:392
+#: wp-ai-editor/includes/admin.php:395
 msgid "Monthly budget (USD)"
 msgstr "Měsíční rozpočet (USD)"
 
-#: wp-ai-editor/includes/admin.php:395
+#: wp-ai-editor/includes/admin.php:398
 msgid "The chat stops when the estimated spending this month reaches this amount. 0 = no limit."
 msgstr "Chat se zastaví, když odhadované útraty za tento měsíc dosáhnou této částky. 0 = bez limitu."
 
-#: wp-ai-editor/includes/admin.php:399
+#: wp-ai-editor/includes/admin.php:402
 msgid "Live answers"
 msgstr "Živé odpovědi"
 
-#: wp-ai-editor/includes/admin.php:403
+#: wp-ai-editor/includes/admin.php:406
 msgid "Show the answer as it is written (streaming)"
 msgstr "Zobrazovat odpověď průběžně, jak vzniká (streaming)"
 
-#: wp-ai-editor/includes/admin.php:408
+#: wp-ai-editor/includes/admin.php:411
 msgid "Also keeps long answers from hitting hosting time limits. Turn it off if answers appear only at the end or never arrive (some proxies buffer the response)."
 msgstr "Také brání tomu, aby dlouhé odpovědi narazily na časové limity hostingu. Vypni, pokud se odpovědi objevují až na konci nebo vůbec (některé proxy odpověď bufferují)."
 
-#: wp-ai-editor/includes/admin.php:409
+#: wp-ai-editor/includes/admin.php:412
 msgid "Not available: the PHP cURL extension is missing on this server."
 msgstr "Nedostupné: na serveru chybí PHP rozšíření cURL."
 
-#: wp-ai-editor/includes/admin.php:415
+#: wp-ai-editor/includes/admin.php:418
 msgid "Editors"
 msgstr "Editoři"
 
-#: wp-ai-editor/includes/admin.php:419
+#: wp-ai-editor/includes/admin.php:422
 msgid "Let editors use the chat"
 msgstr "Povolit chat i editorům"
 
-#: wp-ai-editor/includes/admin.php:421
+#: wp-ai-editor/includes/admin.php:424
 msgid "Editors get only the tools their role allows: content, categories and tags, media, SEO. Styles, CSS, templates, menus and site identity stay with administrators. Editors can undo their own changes; the History and Settings stay admin-only."
 msgstr "Editoři dostanou jen nástroje, které jejich role dovoluje: obsah, kategorie a štítky, média, SEO. Styly, CSS, šablony, menu a identita webu zůstávají administrátorům. Editoři můžou vracet své vlastní změny; Historie a Nastavení zůstávají jen pro administrátory."
 
-#: wp-ai-editor/includes/admin.php:426
+#: wp-ai-editor/includes/admin.php:429
 msgid "Save"
 msgstr "Uložit"
 
-#: wp-ai-editor/includes/admin.php:431
+#: wp-ai-editor/includes/admin.php:434
 msgid "Connection test"
 msgstr "Test připojení"
 
-#: wp-ai-editor/includes/admin.php:432
+#: wp-ai-editor/includes/admin.php:435
 msgid "Checks the saved key and that the selected model is available (save your changes first)."
 msgstr "Ověří uložený klíč a dostupnost zvoleného modelu (nejdřív ulož změny)."
 
-#: wp-ai-editor/includes/admin.php:434
+#: wp-ai-editor/includes/admin.php:437
 msgid "Test connection"
 msgstr "Otestovat připojení"
 
@@ -531,30 +539,30 @@ msgstr "Soubor obrázku se na serveru nepodařilo přečíst."
 msgid "The Files API did not return a file ID."
 msgstr "Files API nevrátilo ID souboru."
 
-#: wp-ai-editor/includes/changes.php:148
+#: wp-ai-editor/includes/changes.php:149
 msgid "This change was not found in the history."
 msgstr "Tato změna nebyla v historii nalezena."
 
-#: wp-ai-editor/includes/changes.php:151
+#: wp-ai-editor/includes/changes.php:152
 msgid "You are not allowed to undo this change."
 msgstr "Tuto změnu nemáš oprávnění vrátit."
 
-#: wp-ai-editor/includes/changes.php:154
+#: wp-ai-editor/includes/changes.php:155
 msgid "This change has already been undone."
 msgstr "Tato změna už byla vrácena."
 
-#: wp-ai-editor/includes/changes.php:159
+#: wp-ai-editor/includes/changes.php:160
 msgid "The undo data for this change is damaged."
 msgstr "Data pro vrácení této změny jsou poškozená."
 
 #. translators: %s: list of change descriptions
-#: wp-ai-editor/includes/changes.php:171
+#: wp-ai-editor/includes/changes.php:172
 #, php-format
 msgid "A newer change touched the same thing. Undo it first: %s"
 msgstr "Stejnou věc mezitím změnila novější změna. Nejdřív vrať ji: %s"
 
 #. translators: %s: error message
-#: wp-ai-editor/includes/changes.php:184
+#: wp-ai-editor/includes/changes.php:185
 #, php-format
 msgid "Undo failed: %s"
 msgstr "Vrácení selhalo: %s"
@@ -818,6 +826,37 @@ msgstr "Typ"
 msgid "Created \"%1$s\" (#%2$d)"
 msgstr "Vytvořeno „%1$s“ (#%2$d)"
 
+#. translators: %s: searched text
+#: wp-ai-editor/includes/tools/customizer.php:55
+#, php-format
+msgid "Searching Customizer settings for \"%s\"…"
+msgstr "Hledám v nastavení Přizpůsobit „%s“…"
+
+#: wp-ai-editor/includes/tools/customizer.php:56
+msgid "Loading Customizer settings…"
+msgstr "Načítám nastavení Přizpůsobit…"
+
+#. translators: %s: setting ID
+#: wp-ai-editor/includes/tools/customizer.php:71
+#, php-format
+msgid "Reading Customizer setting %s…"
+msgstr "Čtu nastavení Přizpůsobit %s…"
+
+#. translators: %d: number of settings
+#: wp-ai-editor/includes/tools/customizer.php:99
+#, php-format
+msgid "Changing %d Customizer setting…"
+msgid_plural "Changing %d Customizer settings…"
+msgstr[0] "Měním %d nastavení Přizpůsobit…"
+msgstr[1] "Měním %d nastavení Přizpůsobit…"
+msgstr[2] "Měním %d nastavení Přizpůsobit…"
+
+#. translators: %s: list of setting IDs
+#: wp-ai-editor/includes/tools/customizer.php:379
+#, php-format
+msgid "Customizer changed: %s"
+msgstr "Změněno v Přizpůsobit: %s"
+
 #: wp-ai-editor/includes/tools/design.php:19
 msgid "Checking site context…"
 msgstr "Zjišťuji kontext webu…"
@@ -981,20 +1020,20 @@ msgid "Featured image of \"%s\" changed"
 msgstr "Náhledový obrázek „%s“ změněn"
 
 #. translators: %s: tool name
-#: wp-ai-editor/includes/tools/registry.php:125
+#: wp-ai-editor/includes/tools/registry.php:126
 #, php-format
 msgid "Running %s…"
 msgstr "Spouštím %s…"
 
-#: wp-ai-editor/includes/tools/registry.php:223 wp-ai-editor/includes/tools/registry.php:235
+#: wp-ai-editor/includes/tools/registry.php:224 wp-ai-editor/includes/tools/registry.php:236
 msgid "Current"
 msgstr "Současné"
 
-#: wp-ai-editor/includes/tools/registry.php:224 wp-ai-editor/includes/tools/registry.php:235
+#: wp-ai-editor/includes/tools/registry.php:225 wp-ai-editor/includes/tools/registry.php:236
 msgid "New"
 msgstr "Nové"
 
-#: wp-ai-editor/includes/tools/registry.php:228
+#: wp-ai-editor/includes/tools/registry.php:229
 msgid "No visible difference."
 msgstr "Žádný viditelný rozdíl."
 

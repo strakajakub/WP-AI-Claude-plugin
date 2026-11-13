@@ -26,6 +26,7 @@ class WP_Error {
 	}
 	public function get_error_code() { return $this->code; }
 	public function get_error_message() { return $this->message; }
+	public function get_error_messages() { return [ $this->message ]; }
 	public function get_error_data() { return $this->data; }
 }
 
@@ -110,6 +111,7 @@ function wp_parse_args( $args, $defaults = [] ) { return array_merge( $defaults,
 function apply_filters( $hook, $value ) { return $value; }
 function add_action() {}
 function add_filter() {}
+function do_action( $hook, ...$args ) { $GLOBALS['wp_test']['actions'][] = $hook; }
 function register_activation_hook() {}
 function plugin_dir_path( $file ) { return dirname( $file ) . '/'; }
 function plugin_dir_url( $file ) { return 'https://example.test/wp-content/plugins/wp-ai-editor/'; }
@@ -183,7 +185,7 @@ $wpaie_dir = dirname( __DIR__ ) . '/wp-ai-editor/includes/';
 foreach ( [ 'helpers', 'settings', 'api', 'tools/registry', 'tools/content', 'tools/design', 'changes', 'conversation', 'agent' ] as $wpaie_file ) {
 	require $wpaie_dir . $wpaie_file . '.php';
 }
-foreach ( [ 'pricing', 'stream', 'images', 'tools/taxonomy-search', 'tools/media', 'tools/seo', 'tools/woocommerce' ] as $wpaie_file ) {
+foreach ( [ 'pricing', 'stream', 'images', 'tools/taxonomy-search', 'tools/media', 'tools/seo', 'tools/woocommerce', 'tools/customizer' ] as $wpaie_file ) {
 	if ( file_exists( $wpaie_dir . $wpaie_file . '.php' ) ) {
 		require $wpaie_dir . $wpaie_file . '.php';
 	}

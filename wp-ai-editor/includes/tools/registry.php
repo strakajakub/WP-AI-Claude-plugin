@@ -66,6 +66,7 @@ function wpaie_core_tools(): array {
 		function_exists( 'wpaie_media_tools' ) ? wpaie_media_tools() : [],
 		function_exists( 'wpaie_seo_tools' ) ? wpaie_seo_tools() : [],
 		wpaie_design_tools(),
+		function_exists( 'wpaie_customizer_tools' ) ? wpaie_customizer_tools() : [],
 		function_exists( 'wpaie_woocommerce_tools' ) ? wpaie_woocommerce_tools() : []
 	);
 }

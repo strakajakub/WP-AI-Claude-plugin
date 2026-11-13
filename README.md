@@ -19,6 +19,7 @@ A WordPress plugin that adds an AI assistant chat (Claude by Anthropic) to the a
 | Navigation menus | menus and items | add and rename items | immediately |
 | Site identity | title, tagline, logo, header image | change / remove | immediately |
 | Additional CSS | current CSS | append / replace | immediately (revertible in Customizer revisions) |
+| Customizer settings of the theme (e.g. Astra) | search all settings with section, label, choices and value | change up to 20 at once, validated by the theme | immediately |
 
 ### Working with the chat
 
@@ -40,7 +41,11 @@ A WordPress plugin that adds an AI assistant chat (Claude by Anthropic) to the a
 
 Estimates use list prices (filter `wpaie_model_prices`); the bill in the Claude Console is authoritative.
 
-When a conversation starts, the assistant checks whether the site uses a block (FSE) or a classic theme and suggests solutions that fit. It cannot edit PHP files, install plugins or themes, or change Customizer settings other than site identity and CSS.
+When a conversation starts, the assistant checks whether the site uses a block (FSE) or a classic theme and suggests solutions that fit. It cannot edit PHP files or install plugins and themes.
+
+### Theme settings (Customizer)
+
+The assistant can read and change everything the active theme offers in **Appearance → Customize** – for Astra e.g. the blog layout, container width, typography, colors, buttons, header and footer builder; the same works for GeneratePress, Kadence and other themes. The Customizer is loaded in the background the way its own screen does it, so every setting comes with the theme's label, choices and validation; changes are saved through the theme's own save hooks (so e.g. Astra rebuilds its CSS), shown for approval first and can be undone. Administrators only.
 
 ## Requirements
 
@@ -168,7 +173,7 @@ wp-ai-editor/              # the plugin itself (contents of the ZIP)
 │   ├── stream.php         # streaming (Anthropic SSE → browser SSE)
 │   ├── pricing.php        # cost estimates, monthly usage, budget
 │   ├── site-context.php   # theme detection, system prompt
-│   ├── tools/             # registry + content, taxonomy-search, media, seo, design, woocommerce
+│   ├── tools/             # registry + content, taxonomy-search, media, seo, design, customizer, woocommerce
 │   ├── changes.php        # change log and undo
 │   ├── conversation.php   # history storage and compaction
 │   ├── agent.php          # a single agent step

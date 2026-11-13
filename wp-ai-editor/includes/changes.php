@@ -15,6 +15,7 @@
  *   menu_item    { menu_id, item_id, title }
  *   wc_product   { product_id, props: { prop: value } }
  *   theme_json   { post_id, content }               – user Global Styles post content
+ *   customizer   { values: { setting_id: value } }  – Customizer settings (saved through the Customizer)
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -227,6 +228,8 @@ function wpaie_undo_op_targets( array $op ): array {
 			return [ 'post:' . (int) ( $op['item_id'] ?? 0 ) ];
 		case 'wc_product':
 			return [ 'wc:' . (int) ( $op['product_id'] ?? 0 ) ];
+		case 'customizer':
+			return array_map( fn( $id ) => "customizer:$id", array_keys( (array) ( $op['values'] ?? [] ) ) );
 	}
 	return [];
 }
@@ -340,6 +343,9 @@ function wpaie_apply_undo_op( array $op ) {
 		case 'menu_item':
 			$res = wpaie_rename_menu_item( (int) $op['menu_id'], (int) $op['item_id'], (string) $op['title'] );
 			return is_wp_error( $res ) ? $res : true;
+
+		case 'customizer':
+			return wpaie_customizer_restore( (array) $op['values'] );
 
 		case 'wc_product':
 			return function_exists( 'wpaie_wc_apply_props' )

@@ -827,5 +827,130 @@ test( 'review 2 fix: lock token and cleanup of images of an unsaved step', funct
 	check( count( $requests ) === 1 && str_ends_with( $requests[0]['url'], '/files/file_new' ) && $requests[0]['args']['method'] === 'DELETE', 'only the newly uploaded file is deleted' );
 } );
 
+// ─── A fake Customizer (what Astra registers, plus core settings that other tools own) ───
+
+class WPAIE_Fake_Setting {
+	public $id;
+	public $type       = 'option';
+	public $default    = '';
+	public $capability = 'edit_theme_options';
+	public $manager;
+	public $validator;
+	public function __construct( $manager, $id, array $args = [] ) {
+		$this->manager = $manager;
+		$this->id      = $id;
+		foreach ( $args as $k => $v ) {
+			$this->$k = $v;
+		}
+	}
+	public function value() { return $GLOBALS['wp_test']['customizer'][ $this->id ] ?? $this->default; }
+	public function validate( $value ) { return $this->validator ? ( $this->validator )( $value ) : true; }
+	public function sanitize( $value ) { return $value; }
+	public function check_capabilities() { return current_user_can( $this->capability ); }
+	public function save() {
+		$value = $this->manager->post_values[ $this->id ] ?? null;
+		if ( $value === null ) {
+			return false;
+		}
+		$GLOBALS['wp_test']['customizer'][ $this->id ] = $value;
+	}
+}
+
+class WP_Customize_Manager {
+	public $post_values = [];
+	private $settings   = [];
+	private $controls   = [];
+	public function __construct( $args = [] ) {
+		$GLOBALS['wp_test_customizer_args'] = $args;
+		$layouts = [ 'blog-layout-1' => 'Classic', 'blog-layout-4' => 'Grid', 'blog-layout-5' => 'List' ];
+		$this->add( 'astra-settings[blog-layout]', 'Blog Layout', 'section-blog', 'ast-radio-image', $layouts, 'blog-layout-1', fn( $v ) => isset( $layouts[ $v ] ) ? true : new WP_Error( 'invalid', 'Invalid layout.' ) );
+		$this->add( 'astra-settings[site-content-width]', 'Container Width', 'section-container-layout', 'ast-slider', [], 1200, fn( $v ) => is_numeric( $v ) && $v >= 768 ? true : new WP_Error( 'invalid', 'Must be at least 768.' ) );
+		$this->add( 'astra-settings[font-size-body]', 'Body Font Size', 'section-body-typo', 'ast-responsive-slider', [], [ 'desktop' => 16, 'tablet' => '', 'mobile' => '' ] );
+		$this->add( 'blogname', 'Site Title', 'title_tagline', 'text', [], 'Web' );
+		$this->add( 'custom_css[astra]', 'CSS', 'custom_css', 'code_editor', [], '' );
+		$this->add( 'nav_menu_locations[primary]', 'Primary', 'menu_locations', 'select', [], 0 );
+	}
+	private function add( $id, $label, $section, $type, $choices, $default, $validator = null ) {
+		$this->settings[ $id ] = new WPAIE_Fake_Setting( $this, $id, [ 'default' => $default, 'validator' => $validator ] );
+		$this->controls[ $id ] = (object) [
+			'settings'    => [ 'default' => $this->settings[ $id ] ],
+			'setting'     => $this->settings[ $id ],
+			'label'       => $label,
+			'description' => '',
+			'type'        => $type,
+			'choices'     => $choices,
+			'input_attrs' => [],
+			'section'     => $section,
+		];
+	}
+	public function wp_loaded() { $GLOBALS['wp_test']['customize_register'] = ( $GLOBALS['wp_test']['customize_register'] ?? 0 ) + 1; }
+	public function settings() { return $this->settings; }
+	public function controls() { return $this->controls; }
+	public function sections() {
+		return [
+			'section-blog'             => (object) [ 'title' => 'Blog / Archive', 'panel' => 'panel-blog' ],
+			'section-container-layout' => (object) [ 'title' => 'Container', 'panel' => 'panel-global' ],
+			'section-body-typo'        => (object) [ 'title' => 'Body', 'panel' => 'panel-global' ],
+		];
+	}
+	public function panels() {
+		return [
+			'panel-blog'   => (object) [ 'title' => 'Blog' ],
+			'panel-global' => (object) [ 'title' => 'Global' ],
+		];
+	}
+	public function get_setting( $id ) { return $this->settings[ $id ] ?? null; }
+	public function set_post_value( $id, $value ) { $this->post_values[ $id ] = $value; }
+}
+
+test( 'customizer: lists theme settings with section, label, choices; other tools\' settings excluded', function () {
+	$out = wpaie_tool_list_customizer_settings( [] );
+	check( str_contains( $out, 'astra-settings[blog-layout] | Blog › Blog / Archive (section-blog) | "Blog Layout"' ), 'setting with panel, section and label' );
+	check( str_contains( $out, 'choices:blog-layout-1=Classic, blog-layout-4=Grid' ) && str_contains( $out, "value:'blog-layout-1'" ), 'choices and current value' );
+	check( ! str_contains( $out, 'blogname' ) && ! str_contains( $out, 'custom_css' ) && ! str_contains( $out, 'nav_menu_locations' ), 'identity, CSS and menus are left to their own tools' );
+	check( ( $GLOBALS['wp_test_customizer_args']['settings_previewed'] ?? null ) === false, 'loaded without previewing' );
+
+	$blog = wpaie_tool_list_customizer_settings( [ 'search' => 'BLOG' ] );
+	check( str_contains( $blog, '1 settings match' ) && str_contains( $blog, 'blog-layout' ), 'search (case-insensitive) by label/section' );
+	check( str_contains( wpaie_tool_list_customizer_settings( [ 'search' => 'nonsense' ] ), 'No Customizer setting matches' ), 'helpful empty result' );
+
+	$one = wpaie_tool_get_customizer_setting( [ 'id' => 'astra-settings[font-size-body]' ] );
+	check( str_contains( $one, '"desktop": 16' ) && str_contains( $one, 'ast-responsive-slider' ), 'full structured value and control type' );
+	check( is_wp_error( wpaie_tool_get_customizer_setting( [ 'id' => 'blogname' ] ) ), 'excluded setting refused' );
+} );
+
+test( 'customizer: update validates everything first, saves with the save hooks, undo restores', function () {
+	$GLOBALS['wp_test']['actions'] = [];
+	$bad = wpaie_run_tool( 'update_customizer_settings', [ 'changes' => [
+		[ 'id' => 'astra-settings[blog-layout]', 'value' => 'blog-layout-4' ],
+		[ 'id' => 'astra-settings[site-content-width]', 'value' => 300 ],
+	] ] );
+	check( is_wp_error( $bad ) && str_contains( $bad->get_error_message(), 'Must be at least 768' ), 'theme validation message returned to the model' );
+	check( empty( $GLOBALS['wp_test']['customizer'] ), 'nothing saved when one value is invalid' );
+
+	check( str_contains( wpaie_tool_preview( 'update_customizer_settings', [ 'changes' => [ [ 'id' => 'astra-settings[blog-layout]', 'value' => 'blog-layout-4' ] ] ] ), 'Blog / Archive › Blog Layout' ), 'preview with readable label' );
+	check( wpaie_tool_needs_approval( 'update_customizer_settings', [ 'changes' => [] ], 'live' ), 'live change, needs approval' );
+
+	WPAIE_Run_Context::$changes = [];
+	$out = wpaie_run_tool( 'update_customizer_settings', [ 'changes' => [
+		[ 'id' => 'astra-settings[blog-layout]', 'value' => 'blog-layout-4' ],
+		[ 'id' => 'astra-settings[font-size-body]', 'value' => [ 'desktop' => 18, 'tablet' => 16, 'mobile' => 15 ] ],
+	] ] );
+	check( str_starts_with( (string) $out, 'Saved: astra-settings[blog-layout], astra-settings[font-size-body]' ), 'saved' );
+	check( $GLOBALS['wp_test']['customizer']['astra-settings[font-size-body]']['desktop'] === 18, 'structured value saved' );
+	check( in_array( 'customize_save', $GLOBALS['wp_test']['actions'], true ) && in_array( 'customize_save_after', $GLOBALS['wp_test']['actions'], true ), 'customize_save hooks fired (theme cache rebuild)' );
+
+	check( wpaie_undo_change( WPAIE_Run_Context::$changes[0]['id'] ) === true, 'undo ok' );
+	check( $GLOBALS['wp_test']['customizer']['astra-settings[blog-layout]'] === 'blog-layout-1' && $GLOBALS['wp_test']['customizer']['astra-settings[font-size-body]']['desktop'] === 16, 'previous values restored' );
+} );
+
+test( 'customizer: only for administrators with the customize capability', function () {
+	$GLOBALS['wp_test']['denied_caps'] = [ 'manage_options' ];
+	update_option( WPAIE_OPTION_KEY, [ 'allow_editors' => true ] );
+	check( ! in_array( 'update_customizer_settings', wpaie_available_tool_names(), true ), 'hidden from editors / shop managers' );
+	$admin = wpaie_system_prompt( [ 'update_customizer_settings', 'update_custom_css' ] );
+	check( str_contains( $admin, 'Customizer settings (Appearance' ) && ! str_contains( $admin, 'change Customizer settings other than' ), 'prompt no longer says Astra settings are out of reach' );
+} );
+
 echo "\n" . ( $failures ? "$failures of $count checks FAILED\n" : "All $count checks passed\n" );
 exit( $failures ? 1 : 0 );

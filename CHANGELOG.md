@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.1.0
+
+- **Theme Customizer settings** (e.g. Astra's layouts, container width, typography, colors, buttons, header/footer, blog): new tools `list_customizer_settings`, `get_customizer_setting` and `update_customizer_settings`. The Customizer is loaded in the background like its own screen, so settings come with the theme's labels, choices, validation and sanitization; changes are validated before anything is saved, saved through `customize_save` / `customize_save_after` (themes rebuild their CSS cache), need approval and can be undone. Works with any theme; administrators only. Site identity, Additional CSS, menus and widgets stay with their own tools.
+- The system prompt no longer says theme settings such as Astra's blog layout are out of reach.
+
 ## 3.0.2
 
 Fixes from a review of the whole plugin:

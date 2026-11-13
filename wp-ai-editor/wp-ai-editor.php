@@ -3,7 +3,7 @@
  * Plugin Name:       WP AI Editor
  * Plugin URI:        https://github.com/strakajakub/WP-AI-Claude-plugin
  * Description:       AI assistant (Claude) that edits content, styles, templates and menus right from the WordPress admin.
- * Version:           3.0.2
+ * Version:           3.1.0
  * Requires at least: 6.0
  * Requires PHP:      8.0
  * Author:            Jakub Straka
@@ -26,7 +26,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'WPAIE_VERSION', '3.0.2' );
+define( 'WPAIE_VERSION', '3.1.0' );
 define( 'WPAIE_FILE', __FILE__ );
 define( 'WPAIE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WPAIE_URL', plugin_dir_url( __FILE__ ) );
@@ -51,6 +51,7 @@ require_once WPAIE_DIR . 'includes/site-context.php';
 require_once WPAIE_DIR . 'includes/tools/registry.php';
 require_once WPAIE_DIR . 'includes/tools/content.php';
 require_once WPAIE_DIR . 'includes/tools/design.php';
+require_once WPAIE_DIR . 'includes/tools/customizer.php';
 require_once WPAIE_DIR . 'includes/tools/taxonomy-search.php';
 require_once WPAIE_DIR . 'includes/tools/media.php';
 require_once WPAIE_DIR . 'includes/tools/seo.php';

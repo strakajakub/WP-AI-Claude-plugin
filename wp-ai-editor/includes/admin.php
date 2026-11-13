@@ -144,6 +144,9 @@ function wpaie_render_chat_page(): void {
 							• <strong><?php esc_html_e( 'products', 'wp-ai-editor' ); ?></strong> — <?php esc_html_e( 'descriptions, prices, sales and stock,', 'wp-ai-editor' ); ?><br>
 						<?php endif; ?>
 						• <strong><?php esc_html_e( 'styles', 'wp-ai-editor' ); ?></strong> — <?php esc_html_e( 'global styles (theme.json) and Additional CSS,', 'wp-ai-editor' ); ?><br>
+						<?php if ( current_user_can( WPAIE_CAPABILITY ) ) : ?>
+							• <strong><?php esc_html_e( 'theme settings', 'wp-ai-editor' ); ?></strong> — <?php esc_html_e( 'everything in the Customizer: layout, fonts, colors, header, footer, blog (e.g. Astra),', 'wp-ai-editor' ); ?><br>
+						<?php endif; ?>
 						• <strong><?php esc_html_e( 'templates', 'wp-ai-editor' ); ?></strong> — <?php esc_html_e( 'block templates (FSE),', 'wp-ai-editor' ); ?><br>
 						• <strong><?php esc_html_e( 'menus and site identity', 'wp-ai-editor' ); ?></strong> — <?php esc_html_e( 'menu items, logo, site title.', 'wp-ai-editor' ); ?><br>
 						<?php esc_html_e( 'Write to me in any language.', 'wp-ai-editor' ); ?>
