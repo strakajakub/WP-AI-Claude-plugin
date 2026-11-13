@@ -41,7 +41,7 @@ function api_message( array $content, string $stop = 'end_turn' ): array {
 }
 
 function settings(): array {
-	return [ 'model' => 'claude-opus-5-5', 'effort' => 'medium' ];
+	return [ 'model' => 'claude-opus-5-5', 'effort' => 'medium', 'approval_mode' => 'none' ];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -76,16 +76,39 @@ test( 'conversation storage round-trips verbatim (empty objects, backslashes, un
 	$state['system']   = 'Systém';
 	$state['messages'] = json_decode( '[{"role":"user","content":"Ahoj \\\\ \"svět\""},{"role":"assistant","content":[{"type":"thinking","thinking":"","signature":"abc"},{"type":"tool_use","id":"t1","name":"get_custom_css","input":{}}]}]' );
 	wpaie_conversation_save( $state );
-	$loaded = wpaie_conversation_load();
+	$loaded = wpaie_conversation_load( $state['id'] );
 	check( wp_json_encode( $loaded['messages'] ) === wp_json_encode( $state['messages'] ), 'messages identical after save/load' );
 	check( str_contains( wp_json_encode( $loaded['messages'] ), '"input":{}' ), 'empty tool input stays an object' );
 	check( $loaded['system'] === 'Systém', 'system prompt stored' );
 } );
 
-test( 'v1 history (plain list) is migrated', function () {
-	update_user_meta( 1, WPAIE_HISTORY_KEY, wp_slash( '[{"role":"user","content":"x"},{"role":"assistant","content":[{"type":"text","text":"y"}]}]' ) );
-	$state = wpaie_conversation_load();
-	check( count( $state['messages'] ) === 2 && $state['system'] === '', 'v1 messages loaded, system regenerated later' );
+test( 'legacy single history (1.x list, 2.0 object) is migrated to a conversation', function () {
+	update_user_meta( 1, 'wpaie_history', wp_slash( '[{"role":"user","content":"Změň barvu"},{"role":"assistant","content":[{"type":"text","text":"y"}]}]' ) );
+	$list = wpaie_conversations_list();
+	check( count( $list ) === 1 && $list[0]['title'] === 'Změň barvu', 'migrated into the index with a title' );
+	check( wpaie_active_conversation_id() === $list[0]['id'], 'migrated conversation is active' );
+	$state = wpaie_conversation_load( $list[0]['id'] );
+	check( count( $state['messages'] ) === 2 && $state['tools'], 'messages loaded, tool set fixed' );
+	check( get_user_meta( 1, 'wpaie_history', true ) === '', 'legacy key removed' );
+
+	update_user_meta( 1, 'wpaie_history', wp_slash( '{"v":2,"system":"S","messages":[{"role":"user","content":"druhá"}],"steps":0}' ) );
+	$list = wpaie_conversations_list();
+	check( count( $list ) === 2, '2.0 history migrated too' );
+} );
+
+test( 'several conversations: list, switch, delete, limit', function () {
+	$a = wpaie_conversation_add_user_text( wpaie_empty_conversation(), 'První' );
+	$b = wpaie_conversation_add_user_text( wpaie_empty_conversation(), 'Druhá' );
+	wpaie_conversation_save( $a );
+	wpaie_conversation_save( $b );
+	$list = wpaie_conversations_list();
+	check( count( $list ) === 2 && $list[0]['id'] === $b['id'], 'newest first' );
+	wpaie_set_active_conversation( $a['id'] );
+	check( wpaie_active_conversation_id() === $a['id'], 'switch' );
+	wpaie_conversation_delete( $a['id'] );
+	check( count( wpaie_conversations_list() ) === 1 && wpaie_active_conversation_id() === '', 'deleted, active cleared' );
+	check( wpaie_conversation_load( $a['id'] )['messages'] === [], 'deleted conversation is gone' );
+	check( wpaie_conversation_load( '../etc' )['messages'] === [], 'invalid id gives a new conversation' );
 } );
 
 test( 'user text after pending tool results is appended to that message', function () {
@@ -267,6 +290,77 @@ test( 'tool definitions are valid for the API', function () {
 		check( wpaie_tool_label( $tool['name'], [] ) !== "Running {$tool['name']}…", "label for {$tool['name']}" );
 	}
 	check( count( $names ) === count( array_unique( $names ) ), 'unique tool names' );
+} );
+
+test( 'approval: live change waits, approve runs it and records an undoable change', function () {
+	$GLOBALS['wp_test']['custom_css'] = 'a{}';
+	wpaie_test_queue_response( 200, api_message( [
+		[ 'type' => 'text', 'text' => 'Přidám CSS.' ],
+		[ 'type' => 'tool_use', 'id' => 'r1', 'name' => 'get_custom_css', 'input' => new stdClass() ],
+		[ 'type' => 'tool_use', 'id' => 'w1', 'name' => 'update_custom_css', 'input' => [ 'css' => 'b{color:red}' ] ],
+	], 'tool_use' ) );
+	$state = wpaie_conversation_add_user_text( wpaie_empty_conversation(), 'x' );
+	$live  = [ 'approval_mode' => 'live' ] + settings();
+
+	$step = wpaie_agent_step( $state, $live, 'k' );
+	check( $step['awaiting'] === true && $step['done'] === false, 'step waits for approval' );
+	check( count( $step['approvals'] ) === 1 && $step['approvals'][0]['live'] === true, 'one live card (the read runs without approval)' );
+	check( str_contains( $step['approvals'][0]['preview'], 'b{color:red}' ), 'preview shows the CSS' );
+	check( $GLOBALS['wp_test']['custom_css'] === 'a{}', 'nothing written yet' );
+	check( is_wp_error( wpaie_agent_step( $state, $live, 'k' ) ), 'cannot continue while awaiting' );
+
+	// Survives a save/load (page reload).
+	wpaie_conversation_save( $state );
+	$state = wpaie_conversation_load( $state['id'] );
+	check( count( wpaie_approval_cards( $state ) ) === 1, 'pending approval restored after reload' );
+
+	$res = wpaie_agent_decide( $state, true, 'k' );
+	check( $res['done'] === false && $state['pending'] === null, 'decided, loop continues' );
+	check( $GLOBALS['wp_test']['custom_css'] === "a{}\n\nb{color:red}", 'CSS written after approval' );
+	$results = end( $state['messages'] )->content;
+	check( count( $results ) === 2 && $results[0]->tool_use_id === 'r1' && $results[1]->tool_use_id === 'w1', 'both results in one message, in order' );
+	check( count( $res['changes'] ) === 1 && isset( $state['change_map']['w1'] ), 'change recorded and mapped to the tool call' );
+
+	$undo = wpaie_undo_change( $res['changes'][0]['id'] );
+	check( $undo === true && $GLOBALS['wp_test']['custom_css'] === 'a{}', 'undo restores the previous CSS' );
+	check( is_wp_error( wpaie_undo_change( $res['changes'][0]['id'] ) ), 'cannot undo twice' );
+} );
+
+test( 'approval: reject records the refusal and changes nothing', function () {
+	wpaie_test_queue_response( 200, api_message( [ [ 'type' => 'tool_use', 'id' => 'w1', 'name' => 'update_custom_css', 'input' => [ 'css' => 'x{}' ] ] ], 'tool_use' ) );
+	$state = wpaie_conversation_add_user_text( wpaie_empty_conversation(), 'x' );
+	wpaie_agent_step( $state, [ 'approval_mode' => 'live' ] + settings(), 'k' );
+	wpaie_agent_decide( $state, false, 'k' );
+	check( $GLOBALS['wp_test']['custom_css'] === '', 'CSS unchanged' );
+	check( end( $state['messages'] )->content[0]->content === WPAIE_REJECTED_RESULT, 'model is told the change was rejected' );
+	check( $GLOBALS['wpdb']->rows === [], 'no change recorded' );
+} );
+
+test( 'approval: a new message instead of a decision skips the change', function () {
+	wpaie_test_queue_response( 200, api_message( [ [ 'type' => 'tool_use', 'id' => 'w1', 'name' => 'update_custom_css', 'input' => [ 'css' => 'x{}' ] ] ], 'tool_use' ) );
+	$state = wpaie_conversation_add_user_text( wpaie_empty_conversation(), 'x' );
+	wpaie_agent_step( $state, [ 'approval_mode' => 'all' ] + settings(), 'k' );
+	wpaie_agent_skip_pending( $state, 'k' );
+	$state = wpaie_conversation_add_user_text( $state, 'ne, jinak' );
+	$last  = end( $state['messages'] )->content;
+	check( $last[0]->content === WPAIE_SKIPPED_RESULT && $last[1]->text === 'ne, jinak', 'skip result + new text in one message' );
+	check( $GLOBALS['wp_test']['custom_css'] === '', 'CSS unchanged' );
+} );
+
+test( 'approval modes', function () {
+	check( ! wpaie_tool_needs_approval( 'get_custom_css', [], 'all' ), 'reads never need approval' );
+	check( wpaie_tool_needs_approval( 'update_custom_css', [ 'css' => 'a' ], 'live' ), 'live change needs approval in live mode' );
+	check( ! wpaie_tool_needs_approval( 'update_custom_css', [ 'css' => 'a' ], 'none' ), 'none mode never asks' );
+	check( ! wpaie_tool_needs_approval( 'create_post', [ 'title' => 'a' ], 'live' ), 'draft does not need approval in live mode' );
+	check( wpaie_tool_needs_approval( 'create_post', [ 'title' => 'a', 'status' => 'publish' ], 'live' ), 'publishing needs approval' );
+	check( wpaie_tool_needs_approval( 'create_post', [ 'title' => 'a' ], 'all' ), 'drafts need approval in all mode' );
+} );
+
+test( 'tools the user may not use are not offered or run', function () {
+	$GLOBALS['wp_test']['denied_caps'] = [ 'edit_theme_options', 'manage_options' ];
+	$names = wpaie_available_tool_names();
+	check( in_array( 'update_post_content', $names, true ) && ! in_array( 'update_custom_css', $names, true ), 'design tools hidden' );
+	check( is_wp_error( wpaie_run_tool( 'update_custom_css', [ 'css' => 'a' ] ) ), 'and refused when called' );
 } );
 
 echo "\n" . ( $failures ? "$failures of $count checks FAILED\n" : "All $count checks passed\n" );

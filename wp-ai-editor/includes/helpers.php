@@ -74,3 +74,14 @@ function wpaie_format_ai_html( string $text ): string {
 	$html = preg_replace( '/`([^`\n]+)`/', '<code>$1</code>', $html );
 	return nl2br( $html, false );
 }
+
+/**
+ * Capability needed to use the chat: administrators, or also editors when allowed in Settings.
+ */
+function wpaie_chat_capability(): string {
+	return ! empty( wpaie_get_settings()['allow_editors'] ) ? 'edit_others_posts' : WPAIE_CAPABILITY;
+}
+
+function wpaie_user_can_chat(): bool {
+	return current_user_can( WPAIE_CAPABILITY ) || current_user_can( wpaie_chat_capability() );
+}

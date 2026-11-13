@@ -205,3 +205,70 @@
 #wpaie-test-result { margin-left: 8px; }
 #wpaie-test-result.is-ok { color: #15803d; }
 #wpaie-test-result.is-error { color: #b91c1c; }
+
+/* ── Approval cards ── */
+.wpaie-msg--ai .wpaie-bubble.wpaie-approval {
+	max-width: 100%;
+	width: 100%;
+	border-color: #c4b5fd;
+	box-shadow: 0 0 0 2px #ede9fe;
+}
+.wpaie-approval-title { margin: 0 0 8px; font-weight: 600; }
+.wpaie-approval-item { margin-bottom: 10px; }
+.wpaie-approval-actions { display: flex; gap: 8px; margin-top: 6px; }
+.wpaie-live-badge {
+	display: inline-block;
+	margin-left: 4px;
+	padding: 1px 7px;
+	font-size: 11px;
+	color: #9a3412;
+	background: #ffedd5;
+	border-radius: 10px;
+}
+.wpaie-warning { color: #9a3412; }
+
+.wpaie-preview-table { border-collapse: collapse; margin: 6px 0; font-size: 12.5px; }
+.wpaie-preview-table th,
+.wpaie-preview-table td { padding: 3px 8px; border: 1px solid #e5e3f3; text-align: left; vertical-align: top; }
+.wpaie-preview-image { max-width: 160px; height: auto; border: 1px solid #e5e3f3; border-radius: 4px; }
+.wpaie-code {
+	max-height: 260px;
+	overflow: auto;
+	margin: 6px 0;
+	padding: 8px 10px;
+	font-size: 12px;
+	white-space: pre-wrap;
+	background: #f6f5fb;
+	border-radius: 6px;
+}
+.wpaie-diff { max-height: 320px; overflow: auto; margin: 6px 0; font-size: 12px; }
+.wpaie-diff table.diff { width: 100%; }
+.wpaie-diff td { white-space: pre-wrap; word-break: break-word; }
+
+/* ── Changes and undo ── */
+.wpaie-change {
+	margin: 0 0 6px;
+	font-size: 12px;
+	color: #555;
+}
+.wpaie-change::before { content: "✓ "; color: #15803d; }
+.wpaie-change .wpaie-undo { font-size: 12px; }
+
+/* ── Streaming, cost, images ── */
+.wpaie-msg--ai .wpaie-bubble.wpaie-streaming { white-space: pre-wrap; }
+.wpaie-msg--ai .wpaie-bubble.wpaie-cost {
+	padding: 2px 8px;
+	font-size: 11px;
+	color: #777;
+	background: transparent;
+	border: 0;
+}
+.wpaie-msg-image {
+	display: block;
+	max-width: 120px;
+	max-height: 120px;
+	margin-bottom: 6px;
+	border-radius: 6px;
+}
+
+#wpaie-history .wpaie-undo { white-space: nowrap; }

@@ -15,6 +15,11 @@ A WordPress plugin that adds an AI assistant chat (Claude by Anthropic) to the a
 | Site identity | title, tagline, logo, header image | change / remove | immediately |
 | Additional CSS | current CSS | append / replace | immediately (revertible in Customizer revisions) |
 
+### Approvals and undo
+
+- **Ask before changes:** before a change that is visible on the site immediately (styles, CSS, templates, menus, site identity, publishing), the chat shows a card with a preview (a diff of the content or template, the CSS or JSON to be applied, a table of old and new values) and waits for **Apply** or **Reject**. In Settings you can switch this to every change, including drafts, or turn it off.
+- **History of changes:** every change the assistant makes is logged with what is needed to restore the previous state. You can undo it right from the chat (the *Undo* link under the change) or from **AI Editor → History**. The log is kept for 180 days.
+
 When a conversation starts, the assistant checks whether the site uses a block (FSE) or a classic theme and suggests solutions that fit. It cannot edit PHP files, install plugins or themes, or change Customizer settings other than site identity and CSS.
 
 ## Requirements
@@ -46,6 +51,7 @@ The constant takes precedence over a key saved in Settings.
 |---|---|---|
 | Model | Claude Opus 5.5 | Fable 5.2 (most capable; slowest and most expensive), Opus 5.5 (best balance), Sonnet 5.5 (faster, cheaper), Haiku 5.5 (fastest, cheapest) |
 | Thinking effort | Medium | Low / Medium / High / Extra high. Higher effort is more careful but slower and more expensive. |
+| Ask before changes | Live changes | Live changes only / every change including drafts / never. |
 
 ### Claude Fable 5.2
 
@@ -109,7 +115,7 @@ All user-facing strings use the `wp-ai-editor` text domain, so the admin UI can 
 
 ## Uninstall
 
-Deleting the plugin in the admin (Plugins → Delete) removes its settings and every user's conversation history (`uninstall.php`).
+Deleting the plugin in the admin (Plugins → Delete) removes its settings, every user's conversations and the history of changes (`uninstall.php`).
 
 ## Development
 
@@ -122,7 +128,8 @@ wp-ai-editor/              # the plugin itself (contents of the ZIP)
 │   ├── settings.php       # settings (key, model, effort)
 │   ├── api.php            # Messages API client, retries, error mapping
 │   ├── site-context.php   # theme detection, system prompt
-│   ├── tools.php          # tool definitions and implementations
+│   ├── tools/             # tool registry and tools (content, design, …)
+│   ├── changes.php        # change log and undo
 │   ├── conversation.php   # history storage and compaction
 │   ├── agent.php          # a single agent step
 │   ├── ajax.php           # AJAX endpoints

@@ -5,19 +5,13 @@
  */
 
 define( 'ABSPATH', __DIR__ . '/' );
+define( 'WPINC', 'wp-includes' );
 define( 'DAY_IN_SECONDS', 86400 );
+define( 'WPAIE_FILE', dirname( __DIR__ ) . '/wp-ai-editor/wp-ai-editor.php' );
 define( 'WPAIE_OPTION_KEY', 'wpaie_settings' );
-define( 'WPAIE_HISTORY_KEY', 'wpaie_history' );
+define( 'WPAIE_CAPABILITY', 'manage_options' );
 
-$GLOBALS['wp_test'] = [
-	'options'    => [],
-	'user_meta'  => [],
-	'transients' => [],
-	'http'       => [],   // queued responses for wp_remote_request
-	'requests'   => [],   // recorded requests
-	'filters'    => [],
-	'custom_css' => '',
-];
+$GLOBALS['wp_test'] = [];
 
 class WP_Error {
 	private $code;
@@ -33,11 +27,39 @@ class WP_Error {
 	public function get_error_data() { return $this->data; }
 }
 
+/** In-memory stand-in for $wpdb, enough for the change log. */
+class WPAIE_Test_DB {
+	public $prefix     = 'wp_';
+	public $insert_id  = 0;
+	public $last_error = '';
+	public $rows       = [];
+	public function get_charset_collate() { return ''; }
+	public function insert( $table, $data ) {
+		$this->insert_id                = count( $this->rows ) + 1;
+		$this->rows[ $this->insert_id ] = (object) ( [ 'id' => $this->insert_id, 'reverted_at' => null, 'reverted_by' => null ] + $data );
+		return 1;
+	}
+	public function update( $table, $data, $where ) {
+		foreach ( $data as $k => $v ) {
+			$this->rows[ $where['id'] ]->$k = $v;
+		}
+		return 1;
+	}
+	public function prepare( $sql, ...$args ) { return [ $sql, $args ]; }
+	public function get_row( $query ) { return $this->rows[ (int) $query[1][0] ] ?? null; }
+	public function query( $query ) { return 0; }
+	public function get_var( $query ) { return count( $this->rows ); }
+	public function get_results( $query ) { return array_reverse( array_values( $this->rows ) ); }
+}
+$GLOBALS['wpdb'] = new WPAIE_Test_DB();
+
 function is_wp_error( $thing ) { return $thing instanceof WP_Error; }
 function __( $text, $domain = 'default' ) { return $text; }
+function esc_html__( $text, $domain = 'default' ) { return esc_html( $text ); }
 function wp_json_encode( $data, $options = 0, $depth = 512 ) { return json_encode( $data, $options, $depth ); }
 function esc_html( $text ) { return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' ); }
 function esc_attr( $text ) { return esc_html( $text ); }
+function esc_url( $url ) { return (string) $url; }
 function esc_url_raw( $url ) { return filter_var( $url, FILTER_SANITIZE_URL ); }
 function sanitize_text_field( $str ) { return trim( strip_tags( (string) $str ) ); }
 function sanitize_title( $str ) { return strtolower( preg_replace( '/[^a-z0-9-]+/i', '-', (string) $str ) ); }
@@ -47,14 +69,19 @@ function wp_parse_args( $args, $defaults = [] ) { return array_merge( $defaults,
 function apply_filters( $hook, $value ) { return $value; }
 function add_action() {}
 function add_filter() {}
+function register_activation_hook() {}
 function plugin_dir_path( $file ) { return dirname( $file ) . '/'; }
 function plugin_dir_url( $file ) { return 'https://example.test/wp-content/plugins/wp-ai-editor/'; }
 function plugin_basename( $file ) { return 'wp-ai-editor/wp-ai-editor.php'; }
 function get_current_user_id() { return 1; }
+function current_user_can( $cap, ...$args ) { return ! in_array( $cap, $GLOBALS['wp_test']['denied_caps'] ?? [], true ); }
+function current_time( $type, $gmt = false ) { return gmdate( 'Y-m-d H:i:s' ); }
+function wp_rand( $min = 0, $max = 0 ) { return $max; }
+function get_post( $id ) { return null; }
 function add_settings_error( $setting, $code, $message ) { $GLOBALS['wp_test']['settings_errors'][] = $code; }
 
 function get_option( $name, $default = false ) { return $GLOBALS['wp_test']['options'][ $name ] ?? $default; }
-function update_option( $name, $value ) { $GLOBALS['wp_test']['options'][ $name ] = $value; return true; }
+function update_option( $name, $value, $autoload = null ) { $GLOBALS['wp_test']['options'][ $name ] = $value; return true; }
 
 function get_user_meta( $user, $key, $single = false ) { return $GLOBALS['wp_test']['user_meta'][ $user ][ $key ] ?? ''; }
 function update_user_meta( $user, $key, $value ) { $GLOBALS['wp_test']['user_meta'][ $user ][ $key ] = wp_unslash( $value ); return true; }
@@ -87,19 +114,28 @@ function wp_remote_retrieve_response_code( $r ) { return $r['response']['code'];
 function wp_remote_retrieve_body( $r ) { return $r['body']; }
 function wp_remote_retrieve_header( $r, $name ) { return $r['headers'][ $name ] ?? ''; }
 
-require dirname( __DIR__ ) . '/wp-ai-editor/includes/helpers.php';
-require dirname( __DIR__ ) . '/wp-ai-editor/includes/settings.php';
-require dirname( __DIR__ ) . '/wp-ai-editor/includes/api.php';
-require dirname( __DIR__ ) . '/wp-ai-editor/includes/tools.php';
-require dirname( __DIR__ ) . '/wp-ai-editor/includes/conversation.php';
-require dirname( __DIR__ ) . '/wp-ai-editor/includes/agent.php';
+$wpaie_dir = dirname( __DIR__ ) . '/wp-ai-editor/includes/';
+foreach ( [ 'helpers', 'settings', 'api', 'tools/registry', 'tools/content', 'tools/design', 'changes', 'conversation', 'agent' ] as $wpaie_file ) {
+	require $wpaie_dir . $wpaie_file . '.php';
+}
+foreach ( [ 'pricing', 'stream', 'images', 'tools/media', 'tools/seo', 'tools/woocommerce' ] as $wpaie_file ) {
+	if ( file_exists( $wpaie_dir . $wpaie_file . '.php' ) ) {
+		require $wpaie_dir . $wpaie_file . '.php';
+	}
+}
 
 function wpaie_test_reset(): void {
-	$GLOBALS['wp_test']['options']    = [];
-	$GLOBALS['wp_test']['user_meta']  = [];
-	$GLOBALS['wp_test']['transients'] = [];
-	$GLOBALS['wp_test']['http']       = [];
-	$GLOBALS['wp_test']['requests']   = [];
-	$GLOBALS['wp_test']['custom_css'] = '';
-	$GLOBALS['wp_test']['settings_errors'] = [];
+	$GLOBALS['wp_test'] = [
+		'options'         => [],
+		'user_meta'       => [],
+		'transients'      => [],
+		'http'            => [],
+		'requests'        => [],
+		'custom_css'      => '',
+		'settings_errors' => [],
+		'denied_caps'     => [],
+	];
+	$GLOBALS['wpdb']->rows      = [];
+	$GLOBALS['wpdb']->insert_id = 0;
 }
+wpaie_test_reset();

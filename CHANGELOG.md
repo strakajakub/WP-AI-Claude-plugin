@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Approvals and undo
+- Changes visible on the site immediately wait for the user's approval in the chat, with a preview (content/template diff, CSS, JSON, old → new values). Configurable: live changes only (default), every change, or never.
+- History of changes (new **AI Editor → History** page, database table `wpaie_changes`): every change is logged with undo data and can be undone from the chat or the history. Kept for 180 days.
+- Tools are defined in a registry with a capability, approval classification and preview per tool; the tool set is fixed per conversation.
+- Conversations are stored per conversation (format v3) with automatic migration of the 2.0 history.
+
 ## 2.0.0
 
 ### API and models

@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin screens: chat page and settings page.
+ * Admin screens: chat, history of changes, settings.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -10,15 +10,26 @@ add_action( 'admin_enqueue_scripts', 'wpaie_enqueue_assets' );
 add_filter( 'plugin_action_links_' . plugin_basename( WPAIE_FILE ), 'wpaie_plugin_action_links' );
 
 function wpaie_register_menu(): void {
+	$cap = wpaie_chat_capability();
+
 	$GLOBALS['wpaie_hooks'] = [
-		add_menu_page( 'AI Editor', 'AI Editor', WPAIE_CAPABILITY, 'wp-ai-editor', 'wpaie_render_chat_page', 'dashicons-superhero', 30 ),
-		add_submenu_page( 'wp-ai-editor', 'AI Editor', __( 'Chat', 'wp-ai-editor' ), WPAIE_CAPABILITY, 'wp-ai-editor', 'wpaie_render_chat_page' ),
-		add_submenu_page( 'wp-ai-editor', __( 'AI Editor — Settings', 'wp-ai-editor' ), __( 'Settings', 'wp-ai-editor' ), WPAIE_CAPABILITY, 'wp-ai-editor-settings', 'wpaie_render_settings_page' ),
+		'chat'     => add_menu_page( 'AI Editor', 'AI Editor', $cap, 'wp-ai-editor', 'wpaie_render_chat_page', 'dashicons-superhero', 30 ),
+		'chat_sub' => add_submenu_page( 'wp-ai-editor', 'AI Editor', __( 'Chat', 'wp-ai-editor' ), $cap, 'wp-ai-editor', 'wpaie_render_chat_page' ),
+		'history'  => add_submenu_page( 'wp-ai-editor', __( 'AI Editor — History', 'wp-ai-editor' ), __( 'History', 'wp-ai-editor' ), WPAIE_CAPABILITY, 'wp-ai-editor-history', 'wpaie_render_history_page' ),
+		'settings' => add_submenu_page( 'wp-ai-editor', __( 'AI Editor — Settings', 'wp-ai-editor' ), __( 'Settings', 'wp-ai-editor' ), WPAIE_CAPABILITY, 'wp-ai-editor-settings', 'wpaie_render_settings_page' ),
 	];
+}
+
+function wpaie_chat_url( array $args = [] ): string {
+	return add_query_arg( $args, admin_url( 'admin.php?page=wp-ai-editor' ) );
 }
 
 function wpaie_settings_url(): string {
 	return admin_url( 'admin.php?page=wp-ai-editor-settings' );
+}
+
+function wpaie_history_url(): string {
+	return admin_url( 'admin.php?page=wp-ai-editor-history' );
 }
 
 function wpaie_plugin_action_links( array $links ): array {
@@ -40,9 +51,22 @@ function wpaie_js_strings(): array {
 		'serverError'    => __( 'Error on the website server (HTTP %d). See the PHP error log for details (enable WP_DEBUG_LOG).', 'wp-ai-editor' ),
 		/* translators: %d: HTTP status code */
 		'unexpected'     => __( 'The server returned an unexpected response (HTTP %d).', 'wp-ai-editor' ),
+		'interrupted'    => __( 'The connection was interrupted before the answer finished. Changes already made are saved – write "continue".', 'wp-ai-editor' ),
 		'unknownError'   => __( 'Unknown error.', 'wp-ai-editor' ),
-		'confirmReset'   => __( 'Delete the whole conversation history and start a new chat?', 'wp-ai-editor' ),
+		'confirmNew'     => __( 'Start a new chat? The current one stays in the list.', 'wp-ai-editor' ),
+		'confirmDelete'  => __( 'Delete this conversation?', 'wp-ai-editor' ),
+		'confirmUndo'    => __( 'Undo this change? Anything changed in the same place since then will be overwritten.', 'wp-ai-editor' ),
 		'testing'        => __( 'Testing…', 'wp-ai-editor' ),
+		'approvalTitle'  => __( 'The assistant wants to make this change:', 'wp-ai-editor' ),
+		'liveBadge'      => __( 'live on the site', 'wp-ai-editor' ),
+		'approve'        => __( 'Apply', 'wp-ai-editor' ),
+		'reject'         => __( 'Reject', 'wp-ai-editor' ),
+		'approved'       => __( 'Approved', 'wp-ai-editor' ),
+		'rejected'       => __( 'Rejected', 'wp-ai-editor' ),
+		'undo'           => __( 'Undo', 'wp-ai-editor' ),
+		'undone'         => __( 'Undone', 'wp-ai-editor' ),
+		/* translators: %s: cost in USD */
+		'turnCost'       => __( '≈ $%s', 'wp-ai-editor' ),
 	];
 }
 
@@ -54,14 +78,21 @@ function wpaie_enqueue_assets( string $hook ): void {
 	wp_enqueue_script( 'wpaie-admin', WPAIE_URL . 'assets/admin.js', [], WPAIE_VERSION, true );
 	wp_add_inline_script(
 		'wpaie-admin',
-		'window.wpaieConfig = ' . wp_json_encode(
-			[
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'wpaie_nonce' ),
-				'i18n'    => wpaie_js_strings(),
-			]
-		) . ';',
+		'window.wpaieConfig = ' . wp_json_encode( wpaie_js_config() ) . ';',
 		'before'
+	);
+}
+
+function wpaie_js_config(): array {
+	return (array) apply_filters(
+		'wpaie_js_config',
+		[
+			'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
+			'nonce'        => wp_create_nonce( 'wpaie_nonce' ),
+			'conversation' => wpaie_active_conversation_id(),
+			'stream'       => false,
+			'i18n'         => wpaie_js_strings(),
+		]
 	);
 }
 
@@ -70,15 +101,20 @@ function wpaie_enqueue_assets( string $hook ): void {
 function wpaie_render_chat_page(): void {
 	$settings = wpaie_get_settings();
 	$no_key   = wpaie_get_api_key() === '';
-	$items    = wpaie_conversation_transcript( wpaie_conversation_load() );
+	$state    = wpaie_conversation_load( wpaie_active_conversation_id() );
+	$items    = wpaie_conversation_transcript( $state );
 	?>
 	<div class="wrap" id="wpaie-wrap">
 		<div id="wpaie-header">
 			<span id="wpaie-logo" aria-hidden="true">✦</span>
 			<h1>AI Editor</h1>
+			<?php do_action( 'wpaie_chat_header', $state ); ?>
 			<span id="wpaie-model-badge"><?php echo esc_html( $settings['model'] ); ?></span>
-			<button type="button" id="wpaie-reset" class="wpaie-icon-btn" title="<?php esc_attr_e( 'New chat (deletes the history)', 'wp-ai-editor' ); ?>" aria-label="<?php esc_attr_e( 'New chat', 'wp-ai-editor' ); ?>">🗑</button>
-			<a href="<?php echo esc_url( wpaie_settings_url() ); ?>" class="wpaie-icon-btn" title="<?php esc_attr_e( 'Settings', 'wp-ai-editor' ); ?>" aria-label="<?php esc_attr_e( 'Settings', 'wp-ai-editor' ); ?>">⚙</a>
+			<button type="button" id="wpaie-new" class="wpaie-icon-btn" title="<?php esc_attr_e( 'New chat', 'wp-ai-editor' ); ?>" aria-label="<?php esc_attr_e( 'New chat', 'wp-ai-editor' ); ?>">＋</button>
+			<?php if ( current_user_can( WPAIE_CAPABILITY ) ) : ?>
+				<a href="<?php echo esc_url( wpaie_history_url() ); ?>" class="wpaie-icon-btn" title="<?php esc_attr_e( 'History of changes', 'wp-ai-editor' ); ?>" aria-label="<?php esc_attr_e( 'History of changes', 'wp-ai-editor' ); ?>">↶</a>
+				<a href="<?php echo esc_url( wpaie_settings_url() ); ?>" class="wpaie-icon-btn" title="<?php esc_attr_e( 'Settings', 'wp-ai-editor' ); ?>" aria-label="<?php esc_attr_e( 'Settings', 'wp-ai-editor' ); ?>">⚙</a>
+			<?php endif; ?>
 		</div>
 
 		<?php if ( $no_key ) : ?>
@@ -105,21 +141,19 @@ function wpaie_render_chat_page(): void {
 						<?php esc_html_e( 'Write to me in any language.', 'wp-ai-editor' ); ?>
 					</div>
 				</div>
-				<?php foreach ( $items as $item ) : ?>
-					<?php if ( $item['role'] === 'user' ) : ?>
-						<div class="wpaie-msg wpaie-msg--user"><div class="wpaie-bubble"><?php echo esc_html( $item['text'] ); ?></div></div>
-					<?php else : ?>
-						<div class="wpaie-msg wpaie-msg--ai"><div class="wpaie-bubble">
-							<?php foreach ( $item['tools'] as $label ) : ?>
-								<div class="wpaie-tool-call"><?php echo esc_html( $label ); ?></div>
-							<?php endforeach; ?>
-							<?php echo $item['html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in wpaie_format_ai_html(). ?>
-						</div></div>
-					<?php endif; ?>
-				<?php endforeach; ?>
+				<?php
+				foreach ( $items as $item ) {
+					wpaie_render_transcript_item( $item );
+				}
+				if ( $state['pending'] ) {
+					wpaie_render_approval_card( wpaie_approval_cards( $state ), true );
+				}
+				?>
 			</div>
 
+			<?php do_action( 'wpaie_chat_before_input', $state ); ?>
 			<form id="wpaie-input-row">
+				<?php do_action( 'wpaie_chat_input_buttons' ); ?>
 				<label for="wpaie-input" class="screen-reader-text"><?php esc_html_e( 'Message for the AI assistant', 'wp-ai-editor' ); ?></label>
 				<textarea id="wpaie-input" rows="2" placeholder="<?php esc_attr_e( 'What should I change? E.g. "Change the primary button color to #e63946"…', 'wp-ai-editor' ); ?>" <?php disabled( $no_key ); ?>></textarea>
 				<button type="submit" id="wpaie-send" aria-label="<?php esc_attr_e( 'Send', 'wp-ai-editor' ); ?>" <?php disabled( $no_key ); ?>>
@@ -127,7 +161,135 @@ function wpaie_render_chat_page(): void {
 				</button>
 			</form>
 		</div>
-		<p class="wpaie-footnote"><?php esc_html_e( 'Enter sends, Shift+Enter adds a new line. Changes to site identity, CSS, styles, templates and menus are live on the site immediately.', 'wp-ai-editor' ); ?></p>
+		<p class="wpaie-footnote"><?php esc_html_e( 'Enter sends, Shift+Enter adds a new line. Every change can be undone in the chat or in the History.', 'wp-ai-editor' ); ?></p>
+	</div>
+	<?php
+}
+
+function wpaie_render_transcript_item( array $item ): void {
+	if ( $item['role'] === 'user' ) {
+		echo '<div class="wpaie-msg wpaie-msg--user"><div class="wpaie-bubble">';
+		foreach ( $item['images'] ?? [] as $attachment_id ) {
+			$url = wp_get_attachment_image_url( (int) $attachment_id, 'thumbnail' );
+			if ( $url ) {
+				echo '<img class="wpaie-msg-image" src="' . esc_url( $url ) . '" alt="" />';
+			}
+		}
+		echo esc_html( $item['text'] ) . '</div></div>';
+		return;
+	}
+
+	echo '<div class="wpaie-msg wpaie-msg--ai"><div class="wpaie-bubble">';
+	foreach ( $item['tools'] as $label ) {
+		echo '<div class="wpaie-tool-call">' . esc_html( $label ) . '</div>';
+	}
+	foreach ( $item['changes'] ?? [] as $change ) {
+		wpaie_render_undo_button( $change );
+	}
+	echo $item['html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in wpaie_format_ai_html().
+	echo '</div></div>';
+}
+
+function wpaie_render_undo_button( array $change ): void {
+	printf(
+		'<div class="wpaie-change"><span>%s</span> <button type="button" class="button-link wpaie-undo" data-change="%d">%s</button></div>',
+		esc_html( (string) ( $change['label'] ?? '' ) ),
+		(int) ( $change['id'] ?? 0 ),
+		esc_html__( 'Undo', 'wp-ai-editor' )
+	);
+}
+
+/**
+ * The approval card. Same markup as admin.js builds for live requests.
+ */
+function wpaie_render_approval_card( array $cards, bool $restored = false ): void {
+	?>
+	<div class="wpaie-msg wpaie-msg--ai">
+		<div class="wpaie-bubble wpaie-approval" <?php echo $restored ? 'data-restored="1"' : ''; ?>>
+			<p class="wpaie-approval-title"><?php esc_html_e( 'The assistant wants to make this change:', 'wp-ai-editor' ); ?></p>
+			<?php foreach ( $cards as $card ) : ?>
+				<div class="wpaie-approval-item">
+					<div class="wpaie-tool-call"><?php echo esc_html( $card['label'] ); ?></div>
+					<?php if ( $card['live'] ) : ?>
+						<span class="wpaie-live-badge"><?php esc_html_e( 'live on the site', 'wp-ai-editor' ); ?></span>
+					<?php endif; ?>
+					<?php echo $card['preview']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts in the tool preview callbacks. ?>
+				</div>
+			<?php endforeach; ?>
+			<div class="wpaie-approval-actions">
+				<button type="button" class="button button-primary wpaie-approve"><?php esc_html_e( 'Apply', 'wp-ai-editor' ); ?></button>
+				<button type="button" class="button wpaie-reject"><?php esc_html_e( 'Reject', 'wp-ai-editor' ); ?></button>
+			</div>
+		</div>
+	</div>
+	<?php
+}
+
+// ─── History page ─────────────────────────────────────────────────────────────
+
+function wpaie_render_history_page(): void {
+	$page     = max( 1, isset( $_GET['paged'] ) ? absint( $_GET['paged'] ) : 1 ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only pagination.
+	$per_page = 50;
+	$list     = wpaie_list_changes( $page, $per_page );
+	$pages    = max( 1, (int) ceil( $list['total'] / $per_page ) );
+	?>
+	<div class="wrap" id="wpaie-history">
+		<h1><?php esc_html_e( 'AI Editor — History of changes', 'wp-ai-editor' ); ?></h1>
+		<p>
+			<?php
+			printf(
+				/* translators: %d: number of days */
+				esc_html__( 'Every change the assistant made, newest first. Changes are kept for %d days.', 'wp-ai-editor' ),
+				(int) WPAIE_CHANGES_KEEP_DAYS
+			);
+			?>
+		</p>
+		<table class="widefat striped">
+			<thead>
+				<tr>
+					<th><?php esc_html_e( 'When', 'wp-ai-editor' ); ?></th>
+					<th><?php esc_html_e( 'User', 'wp-ai-editor' ); ?></th>
+					<th><?php esc_html_e( 'Change', 'wp-ai-editor' ); ?></th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php if ( ! $list['rows'] ) : ?>
+					<tr><td colspan="4"><?php esc_html_e( 'No changes yet.', 'wp-ai-editor' ); ?></td></tr>
+				<?php endif; ?>
+				<?php foreach ( $list['rows'] as $row ) : ?>
+					<?php $user = get_userdata( (int) $row->user_id ); ?>
+					<tr>
+						<td><?php echo esc_html( get_date_from_gmt( $row->created_at, get_option( 'date_format' ) . ' ' . get_option( 'time_format' ) ) ); ?></td>
+						<td><?php echo esc_html( $user ? $user->display_name : '#' . (int) $row->user_id ); ?></td>
+						<td><?php echo esc_html( $row->label ); ?></td>
+						<td>
+							<?php if ( $row->reverted_at ) : ?>
+								<em><?php esc_html_e( 'Undone', 'wp-ai-editor' ); ?></em>
+							<?php else : ?>
+								<button type="button" class="button wpaie-undo" data-change="<?php echo (int) $row->id; ?>"><?php esc_html_e( 'Undo', 'wp-ai-editor' ); ?></button>
+							<?php endif; ?>
+						</td>
+					</tr>
+				<?php endforeach; ?>
+			</tbody>
+		</table>
+		<?php if ( $pages > 1 ) : ?>
+			<div class="tablenav"><div class="tablenav-pages">
+				<?php
+				echo wp_kses_post(
+					paginate_links(
+						[
+							'base'    => add_query_arg( 'paged', '%#%' ),
+							'format'  => '',
+							'current' => $page,
+							'total'   => $pages,
+						]
+					)
+				);
+				?>
+			</div></div>
+		<?php endif; ?>
 	</div>
 	<?php
 }
@@ -207,9 +369,23 @@ function wpaie_render_settings_page(): void {
 						<p class="description"><?php esc_html_e( 'With Claude Fable 5.2, start with High.', 'wp-ai-editor' ); ?></p>
 					</td>
 				</tr>
+				<tr>
+					<th scope="row"><label for="wpaie-approval"><?php esc_html_e( 'Ask before changes', 'wp-ai-editor' ); ?></label></th>
+					<td>
+						<select id="wpaie-approval" name="<?php echo esc_attr( $name ); ?>[approval_mode]">
+							<?php foreach ( wpaie_approval_modes() as $id => $label ) : ?>
+								<option value="<?php echo esc_attr( $id ); ?>" <?php selected( $settings['approval_mode'], $id ); ?>><?php echo esc_html( $label ); ?></option>
+							<?php endforeach; ?>
+						</select>
+						<p class="description"><?php esc_html_e( 'The assistant shows a preview of the change and waits for Apply or Reject. Every change can be undone in the History either way.', 'wp-ai-editor' ); ?></p>
+					</td>
+				</tr>
+				<?php do_action( 'wpaie_settings_rows', $settings ); ?>
 			</table>
 			<?php submit_button( __( 'Save', 'wp-ai-editor' ) ); ?>
 		</form>
+
+		<?php do_action( 'wpaie_settings_after_form', $settings ); ?>
 
 		<h2><?php esc_html_e( 'Connection test', 'wp-ai-editor' ); ?></h2>
 		<p><?php esc_html_e( 'Checks the saved key and that the selected model is available (save your changes first).', 'wp-ai-editor' ); ?></p>

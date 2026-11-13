@@ -60,7 +60,7 @@ function wpaie_max_tokens( string $model ): int {
  * @param array  $messages List of message objects (stdClass) – sent verbatim.
  * @return object|WP_Error Decoded response.
  */
-function wpaie_messages_create( string $api_key, string $model, string $effort, string $system, array $messages, array $tools ) {
+function wpaie_messages_create( string $api_key, string $model, string $effort, string $system, array $messages, array $tools, ?callable $emit = null ) {
 	$use_beta = ! get_transient( WPAIE_NO_BETA_TRANSIENT );
 	$result   = wpaie_send_messages_request( $api_key, $model, $effort, $system, $messages, $tools, $use_beta );
 

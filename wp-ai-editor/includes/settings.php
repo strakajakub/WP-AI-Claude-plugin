@@ -7,6 +7,20 @@ defined( 'ABSPATH' ) || exit;
 
 define( 'WPAIE_DEFAULT_MODEL', 'claude-opus-5-5' );
 define( 'WPAIE_DEFAULT_EFFORT', 'medium' );
+define( 'WPAIE_DEFAULT_APPROVAL', 'live' );
+
+/**
+ * When the user has to approve a change before it is made.
+ *
+ * @return array<string,string>
+ */
+function wpaie_approval_modes(): array {
+	return [
+		'live' => __( 'Changes visible on the site immediately (recommended)', 'wp-ai-editor' ),
+		'all'  => __( 'Every change, including drafts', 'wp-ai-editor' ),
+		'none' => __( 'Never — the assistant makes changes without asking', 'wp-ai-editor' ),
+	];
+}
 
 /**
  * Models offered in the settings. Filterable so a site can add e.g. a newer model ID.
@@ -44,9 +58,10 @@ function wpaie_get_settings(): array {
 	$settings = wp_parse_args(
 		is_array( $raw ) ? $raw : [],
 		[
-			'api_key' => '',
-			'model'   => WPAIE_DEFAULT_MODEL,
-			'effort'  => WPAIE_DEFAULT_EFFORT,
+			'api_key'       => '',
+			'model'         => WPAIE_DEFAULT_MODEL,
+			'effort'        => WPAIE_DEFAULT_EFFORT,
+			'approval_mode' => WPAIE_DEFAULT_APPROVAL,
 		]
 	);
 
@@ -56,6 +71,9 @@ function wpaie_get_settings(): array {
 	}
 	if ( ! isset( wpaie_effort_levels()[ $settings['effort'] ] ) ) {
 		$settings['effort'] = WPAIE_DEFAULT_EFFORT;
+	}
+	if ( ! isset( wpaie_approval_modes()[ $settings['approval_mode'] ] ) ) {
+		$settings['approval_mode'] = WPAIE_DEFAULT_APPROVAL;
 	}
 	return $settings;
 }
@@ -125,9 +143,15 @@ function wpaie_sanitize_settings( $input ): array {
 		$effort = WPAIE_DEFAULT_EFFORT;
 	}
 
+	$approval = (string) ( $input['approval_mode'] ?? $old['approval_mode'] );
+	if ( ! isset( wpaie_approval_modes()[ $approval ] ) ) {
+		$approval = WPAIE_DEFAULT_APPROVAL;
+	}
+
 	return [
-		'api_key' => $key,
-		'model'   => $model,
-		'effort'  => $effort,
+		'api_key'       => $key,
+		'model'         => $model,
+		'effort'        => $effort,
+		'approval_mode' => $approval,
 	];
 }
